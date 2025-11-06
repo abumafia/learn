@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnglishMaster - Ingliz Tili O'rganish Platformasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="/" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-graduation-cap mr-2"></i>
+                    EnglishMaster
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="/courses" class="hover:text-blue-200 transition">Kurslar</a>
+                    <div id="authButtons" class="flex items-center space-x-4">
+                        <a href="/login" class="hover:text-blue-200 transition">Kirish</a>
+                        <a href="/register" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
+                            Ro'yxatdan o'tish
+                        </a>
+                    </div>
+                    <div id="userMenu" class="hidden flex items-center space-x-4">
+                        <a href="/profile" class="hover:text-blue-200 transition">Profil</a>
+                        <a href="/teacher" class="hover:text-blue-200 transition">O'qituvchi</a>
+                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+                            Chiqish
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-500 to-purple-600 text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-5xl font-bold mb-6">Ingliz Tilini O'rganing</h1>
+            <p class="text-xl mb-8 max-w-2xl mx-auto">
+                AI yordamida, interaktiv darslar va real vaqtda speaking amaliyoti bilan tez va samarali o'rganing
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="/courses" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200">
+                    Kurslarni Ko'rish
+                </a>
+                <a href="/register" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition duration-200">
+                    Boshlash
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Nima uchun EnglishMaster?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-robot text-blue-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">AI Yordamchi</h3>
+                    <p class="text-gray-600">Sun'iy intellekt yordamida writing va speaking ko'nikmalaringizni takomillashtiring</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-video text-green-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Video Darslar</h3>
+                    <p class="text-gray-600">Professional o'qituvchilar tomonidan tayyorlangan video darslar</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-gamepad text-purple-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-4">Interaktiv Testlar</h3>
+                    <p class="text-gray-600">O'z bilimingizni qiziqarli testlar orqali sinab ko'ring</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Popular Courses -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-800">Mashhur Kurslar</h2>
+            <div id="popularCourses" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Kurslar JavaScript orqali yuklanadi -->
+            </div>
+            <div class="text-center mt-8">
+                <a href="/courses" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
+                    Barcha Kurslarni Ko'rish
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="p-6">
+                    <i class="fas fa-users text-4xl text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800" id="studentsCount">10,000+</h3>
+                    <p class="text-gray-600">Faol O'quvchilar</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-book-open text-4xl text-green-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800" id="coursesCount">100+</h3>
+                    <p class="text-gray-600">Kurslar</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-chart-line text-4xl text-purple-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">95%</h3>
+                    <p class="text-gray-600">Muvaffaqiyat Darajasi</p>
+                </div>
+                <div class="p-6">
+                    <i class="fas fa-globe text-4xl text-red-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">50+</h3>
+                    <p class="text-gray-600">Mamlakatlar</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Auth holatini tekshirish
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            
+            if (token) {
+                authButtons.classList.add('hidden');
+                userMenu.classList.remove('hidden');
+            } else {
+                authButtons.classList.remove('hidden');
+                userMenu.classList.add('hidden');
+            }
+        }
+
+        // Chiqish funksiyasi
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Mashhur kurslarni yuklash
+        async function loadPopularCourses() {
+            try {
+                const response = await fetch('/api/courses');
+                if (response.ok) {
+                    const courses = await response.json();
+                    displayCourses(courses.slice(0, 6)); // Faqat 6 ta kurs
+                    
+                    // Statistikani yangilash
+                    document.getElementById('coursesCount').textContent = courses.length + '+';
+                    document.getElementById('studentsCount').textContent = 
+                        (courses.reduce((total, course) => total + (course.students?.length || 0), 0) + 10000) + '+';
+                }
+            } catch (error) {
+                console.error('Kurslarni yuklashda xato:', error);
+            }
+        }
+
+        function displayCourses(courses) {
+            const container = document.getElementById('popularCourses');
+            container.innerHTML = '';
+
+            courses.forEach(course => {
+                const courseCard = `
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
+                        <div class="h-48 bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center">
+                            ${course.image ? 
+                                `<img src="/uploads/${course.image}" alt="${course.title}" class="w-full h-full object-cover">` :
+                                `<i class="fas fa-book-open text-white text-6xl"></i>`
+                            }
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold mb-2 text-gray-800">${course.title}</h3>
+                            <p class="text-gray-600 mb-4 line-clamp-2">${course.description || 'Tavsif mavjud emas'}</p>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    ${course.level}
+                                </span>
+                                <span class="text-lg font-bold ${course.price === 0 ? 'text-green-600' : 'text-orange-600'}">
+                                    ${course.price === 0 ? 'Bepul' : course.price + ' coin'}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm text-gray-500 mb-4">
+                                <span>${course.lessons?.length || 0} dars</span>
+                                <span>${course.teacher?.firstName || 'Admin'}</span>
+                            </div>
+                            <a href="/course/${course._id}" 
+                               class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-center transition duration-200">
+                                Ko'rish
+                            </a>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += courseCard;
+            });
+        }
+
+        // Sahifa yuklanganda
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadPopularCourses();
+        });
+    </script>
+</body>
+</html>

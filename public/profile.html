@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - EnglishMaster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="/" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-graduation-cap mr-2"></i>
+                    EnglishMaster
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="/courses" class="hover:text-purple-200 transition">Kurslar</a>
+                    <a href="/profile" class="font-semibold">Profil</a>
+                    <a href="/teacher" class="hover:text-purple-200 transition">O'qituvchi</a>
+                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
+                        Chiqish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Profil ma'lumotlari -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Profil kartasi -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <div class="text-center">
+                        <div class="w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-4xl font-bold relative">
+                            <img id="avatarImage" src="" alt="Avatar" class="w-32 h-32 rounded-full object-cover hidden">
+                            <span id="avatarInitials" class="text-4xl"></span>
+                        </div>
+                        <h2 id="userName" class="text-2xl font-bold text-gray-800 mb-2">Ism Familiya</h2>
+                        <p id="userBio" class="text-gray-600 mb-4">Bio</p>
+                        <div class="flex justify-center space-x-4 mb-4">
+                            <span id="userLevel" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"></span>
+                            <span id="userAge" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coin va Premium -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">Hisob</h3>
+                    
+                    <!-- Coinlar -->
+                    <div class="flex items-center justify-between mb-6 p-4 bg-yellow-50 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-coins text-yellow-600 text-2xl mr-3"></i>
+                            <div>
+                                <p class="text-sm text-gray-600">Mavjud Coinlar</p>
+                                <p id="coinsCount" class="text-2xl font-bold text-gray-800">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium status -->
+                    <div id="premiumSection">
+                        <!-- Premium status JavaScript orqali yuklanadi -->
+                    </div>
+                </div>
+
+                <!-- Statistika -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">O'qish Statistika</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">Tugatilgan Kurslar</span>
+                                <span id="completedCourses" class="font-semibold">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="coursesProgress" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">O'tilgan Darslar</span>
+                                <span id="completedLessons" class="font-semibold">0</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="lessonsProgress" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-600">O'rtacha Ball</span>
+                                <span id="averageScore" class="font-semibold">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div id="scoreProgress" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profil sozlamalari va progress -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Profilni tahrirlash -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Profilni Tahrirlash</h2>
+                    <form id="profileForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 mb-2">Ism</label>
+                                <input type="text" id="editFirstName" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                       required>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Familiya</label>
+                                <input type="text" id="editLastName" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2">Email</label>
+                            <input type="email" id="editEmail" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-100"
+                                   readonly>
+                            <p class="text-sm text-gray-500 mt-1">Email o'zgartirib bo'lmaydi</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 mb-2">Ingliz Tili Darajasi</label>
+                                <select id="editEnglishLevel" 
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                                    <option value="beginner">Boshlang'ich (Beginner)</option>
+                                    <option value="elementary">Elementar (Elementary)</option>
+                                    <option value="intermediate">O'rta (Intermediate)</option>
+                                    <option value="upper-intermediate">Yuqori O'rta (Upper-Intermediate)</option>
+                                    <option value="advanced">Ilg'or (Advanced)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2">Yosh</label>
+                                <input type="number" id="editAge" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                       min="10" max="100">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2">Bio</label>
+                            <textarea id="editBio" rows="3"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                      placeholder="O'zingiz haqingizda qisqacha..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 mb-2">Profil Rasmı</label>
+                            <div class="flex items-center space-x-4">
+                                <input type="file" id="avatarFile" accept="image/*" 
+                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" onclick="resetForm()" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
+                                Bekor Qilish
+                            </button>
+                            <button type="submit" 
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
+                                <i class="fas fa-save mr-2"></i> O'zgarishlarni Saqlash
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Faol kurslar -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">Faol Kurslar</h3>
+                    <div id="activeCourses" class="space-y-4">
+                        <!-- Kurslar JavaScript orqali yuklanadi -->
+                    </div>
+                </div>
+
+                <!-- Qo'shimcha funksiyalar -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- AI Writing Assistant -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-robot text-purple-600 text-2xl mr-3"></i>
+                            <h3 class="text-xl font-bold text-gray-800">AI Writing Assistant</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Yozgan matnlaringizni tekshirish</p>
+                        <button onclick="openWritingAssistant()" 
+                                class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition duration-200">
+                            Boshlash
+                        </button>
+                    </div>
+
+                    <!-- Speaking Practice -->
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-microphone-alt text-green-600 text-2xl mr-3"></i>
+                            <h3 class="text-xl font-bold text-gray-800">Speaking Practice</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Ovozingizni yozib, talaffuzni tekshirish</p>
+                        <button onclick="openSpeakingPractice()" 
+                                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition duration-200">
+                            Boshlash
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Writing Assistant Modal -->
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">AI Writing Assistant</h3>
+                <button onclick="closeWritingModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <textarea id="writingText" rows="10" 
+                          class="w-full border border-gray-300 rounded-lg p-4 mb-4"
+                          placeholder="Bu yerda ingliz tilida matn yozing..."></textarea>
+                <button onclick="checkWriting()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg mb-4">
+                    Tekshirish
+                </button>
+                <div id="writingResult" class="hidden">
+                    <!-- Natijalar shu yerda ko'rsatiladi -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth tekshirish
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        let currentUser = null;
+        let userProgress = [];
+
+        // Foydalanuvchi ma'lumotlarini yuklash
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    displayUserProfile();
+                    await loadUserProgress();
+                    await loadActiveCourses();
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Profil yuklashda xato:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        function displayUserProfile() {
+            // Asosiy ma'lumotlar
+            document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+            document.getElementById('userBio').textContent = currentUser.bio || 'Bio kiritilmagan';
+            document.getElementById('userLevel').textContent = getLevelText(currentUser.englishLevel);
+            document.getElementById('userAge').textContent = currentUser.age ? `${currentUser.age} yosh` : 'Yosh kiritilmagan';
+            document.getElementById('coinsCount').textContent = currentUser.coins;
+
+            // Form ma'lumotlari
+            document.getElementById('editFirstName').value = currentUser.firstName || '';
+            document.getElementById('editLastName').value = currentUser.lastName || '';
+            document.getElementById('editEmail').value = currentUser.email || '';
+            document.getElementById('editEnglishLevel').value = currentUser.englishLevel || 'beginner';
+            document.getElementById('editAge').value = currentUser.age || '';
+            document.getElementById('editBio').value = currentUser.bio || '';
+
+            // Avatar
+            displayAvatar();
+
+            // Premium section
+            displayPremiumSection();
+        }
+
+        function displayAvatar() {
+            const avatarImage = document.getElementById('avatarImage');
+            const avatarInitials = document.getElementById('avatarInitials');
+            
+            if (currentUser.avatar) {
+                avatarImage.src = `/uploads/${currentUser.avatar}`;
+                avatarImage.classList.remove('hidden');
+                avatarInitials.classList.add('hidden');
+            } else {
+                const initials = (currentUser.firstName?.charAt(0) || '') + (currentUser.lastName?.charAt(0) || '');
+                avatarInitials.textContent = initials || 'U';
+                avatarImage.classList.add('hidden');
+                avatarInitials.classList.remove('hidden');
+            }
+        }
+
+        function displayPremiumSection() {
+            const premiumSection = document.getElementById('premiumSection');
+            
+            if (currentUser.isPremium) {
+                premiumSection.innerHTML = `
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 text-white text-center">
+                        <i class="fas fa-crown text-2xl mb-2"></i>
+                        <h4 class="font-bold text-lg mb-1">PREMIUM</h4>
+                        <p class="text-sm">Siz Premium obunasiz</p>
+                    </div>
+                `;
+            } else {
+                premiumSection.innerHTML = `
+                    <div class="border-2 border-yellow-400 rounded-lg p-4 text-center">
+                        <i class="fas fa-crown text-yellow-500 text-2xl mb-2"></i>
+                        <h4 class="font-bold text-lg mb-2">Premium Obuna</h4>
+                        <p class="text-gray-600 text-sm mb-3">Qo'shimcha funksiyalardan foydalaning</p>
+                        <button onclick="subscribePremium()" 
+                                class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold transition duration-200">
+                            ${currentUser.coins >= 1200 ? 
+                                '1200 coin bilan obuna bo\'lish' : 
+                                `Yetarli coin yo'q (${1200 - currentUser.coins} coin kerak)`}
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadUserProgress() {
+            try {
+                const response = await fetch('/api/progress', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    userProgress = await response.json();
+                    updateStatistics();
+                }
+            } catch (error) {
+                console.error('Progress yuklashda xato:', error);
+            }
+        }
+
+        function updateStatistics() {
+            const completedCourses = userProgress.filter(p => p.progress === 100).length;
+            const completedLessons = userProgress.reduce((total, p) => total + (p.completedLessons?.length || 0), 0);
+            
+            // O'rtacha ballni hisoblash (simulyatsiya)
+            const averageScore = userProgress.length > 0 ? 
+                Math.round(userProgress.reduce((total, p) => {
+                    const quizAvg = p.quizResults.length > 0 ? 
+                        p.quizResults.reduce((sum, q) => sum + (q.score / q.totalQuestions), 0) / p.quizResults.length * 100 : 0;
+                    return total + quizAvg;
+                }, 0) / userProgress.length) : 0;
+
+            document.getElementById('completedCourses').textContent = completedCourses;
+            document.getElementById('completedLessons').textContent = completedLessons;
+            document.getElementById('averageScore').textContent = averageScore + '%';
+
+            // Progress barlarni yangilash
+            document.getElementById('coursesProgress').style.width = Math.min(completedCourses * 10, 100) + '%';
+            document.getElementById('lessonsProgress').style.width = Math.min(completedLessons, 100) + '%';
+            document.getElementById('scoreProgress').style.width = averageScore + '%';
+        }
+
+        async function loadActiveCourses() {
+            const activeCourses = document.getElementById('activeCourses');
+            
+            if (userProgress.length === 0) {
+                activeCourses.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-book-open text-4xl mb-4"></i>
+                        <p>Hali hech qanday kursga yozilmagansiz</p>
+                        <a href="/courses" class="text-blue-600 hover:underline mt-2 inline-block">Kurslarni ko'rish</a>
+                    </div>
+                `;
+                return;
+            }
+
+            activeCourses.innerHTML = userProgress.map(progress => `
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                            <i class="fas fa-book text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${progress.course.title}</h4>
+                            <p class="text-sm text-gray-600">Progress: ${progress.progress}%</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-24 bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: ${progress.progress}%"></div>
+                        </div>
+                        <a href="/course/${progress.course._id}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Profilni yangilash
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('firstName', document.getElementById('editFirstName').value);
+            formData.append('lastName', document.getElementById('editLastName').value);
+            formData.append('englishLevel', document.getElementById('editEnglishLevel').value);
+            formData.append('age', document.getElementById('editAge').value);
+            formData.append('bio', document.getElementById('editBio').value);
+
+            const avatarFile = document.getElementById('avatarFile').files[0];
+            if (avatarFile) {
+                formData.append('avatar', avatarFile);
+            }
+
+            try {
+                const response = await fetch('/api/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Profil muvaffaqiyatli yangilandi!');
+                    currentUser = result.user;
+                    displayUserProfile();
+                    resetForm();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('Xato:', error);
+                alert('Profilni yangilashda xato yuz berdi');
+            }
+        });
+
+        // Formani tozalash
+        function resetForm() {
+            document.getElementById('avatarFile').value = '';
+        }
+
+        // Premium obuna
+        async function subscribePremium() {
+            if (currentUser.coins < 1200) {
+                alert(`Premium obuna uchun yetarli coin mavjud emas. Sizda ${currentUser.coins} coin, kerak 1200 coin`);
+                return;
+            }
+
+            if (!confirm('1200 coin evaziga Premium obunaga aylanasizmi?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/premium/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Tabriklaymiz! Siz Premium obunaga aylandingiz!');
+                    loadUserProfile(); // Profilni qayta yuklash
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                console.error('Xato:', error);
+                alert('Obuna jarayonida xato yuz berdi');
+            }
+        }
+
+        // Writing Assistant
+        function openWritingAssistant() {
+            document.getElementById('writingModal').classList.remove('hidden');
+        }
+
+        function closeWritingModal() {
+            document.getElementById('writingModal').classList.add('hidden');
+            document.getElementById('writingResult').classList.add('hidden');
+            document.getElementById('writingText').value = '';
+        }
+
+        async function checkWriting() {
+            const text = document.getElementById('writingText').value;
+            if (!text.trim()) {
+                alert('Iltimos, tekshirish uchun matn kiriting');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/ai/writing-check', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+                displayWritingResult(result);
+            } catch (error) {
+                console.error('Xato:', error);
+            }
+        }
+
+        function displayWritingResult(result) {
+            const resultDiv = document.getElementById('writingResult');
+            resultDiv.classList.remove('hidden');
+            
+            let mistakesHtml = '';
+            if (result.grammarMistakes.length > 0) {
+                mistakesHtml = `
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-red-600 mb-2">Grammatik Xatolar:</h4>
+                        ${result.grammarMistakes.map(mistake => `
+                            <div class="bg-red-50 border border-red-200 rounded p-3 mb-2">
+                                <p><strong>Xato:</strong> "${mistake.mistake}"</p>
+                                <p><strong>To'g'ri:</strong> "${mistake.correction}"</p>
+                                <p><strong>Izoh:</strong> ${mistake.explanation}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            let suggestionsHtml = '';
+            if (result.suggestions.length > 0) {
+                suggestionsHtml = `
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-blue-600 mb-2">Takliflar:</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            ${result.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-center mb-4">
+                        <h4 class="text-xl font-bold">Writing Bahosi: ${result.score}/10</h4>
+                        <p class="text-gray-600">${result.overallFeedback}</p>
+                    </div>
+                    ${mistakesHtml}
+                    ${suggestionsHtml}
+                </div>
+            `;
+        }
+
+        function openSpeakingPractice() {
+            alert('Speaking practice funksiyasi keyingi versiyada qo\'shiladi');
+        }
+
+        function getLevelText(level) {
+            const levels = {
+                'beginner': 'Boshlang\'ich',
+                'elementary': 'Elementar', 
+                'intermediate': 'O\'rta',
+                'upper-intermediate': 'Yuqori O\'rta',
+                'advanced': 'Ilg\'or'
+            };
+            return levels[level] || level;
+        }
+
+        // Chiqish funksiyasi
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        // Sahifa yuklanganda
+        document.addEventListener('DOMContentLoaded', loadUserProfile);
+    </script>
+</body>
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kurs | English Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/index.html" class="text-2xl font-bold flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Orqaga
+            </a>
+            <div class="flex items-center space-x-6">
+                <span id="userCoins" class="bg-yellow-500 text-yellow-900 px-3 py-1 rounded-full font-semibold">
+                    <i class="fas fa-coins mr-1"></i>
+                    <span id="coinsCount">0</span> coin
+                </span>
+                <a href="/profile.html" class="hover:underline flex items-center">
+                    <i class="fas fa-user mr-2"></i>
+                    Profil
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4">
+        <!-- Kurs ma'lumotlari -->
+        <div id="courseInfo" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <!-- Kurs ma'lumotlari JavaScript orqali yuklanadi -->
+        </div>
+
+        <!-- Darslar ro'yxati -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Kurs Darslari</h2>
+            <div id="lessonsList" class="space-y-4">
+                <!-- Darslar JavaScript orqali yuklanadi -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg w-full max-w-4xl">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="videoTitle" class="text-xl font-bold"></h3>
+                <button onclick="closeVideoModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+                <!-- Video Modal ichiga -->
+<button onclick="startSpeech()" class="bg-orange-600 text-white px-4 py-2 rounded mt-4">Talaffuzni tekshirish</button>
+            </div>
+            <div class="p-4">
+                <video id="lessonVideo" controls class="w-full rounded-lg" poster="/api/placeholder/800/450">
+                    Sizning brauzeringiz video elementni qo'llab-quvvatlamaydi.
+                </video>
+                <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Dars Materiallari:</h4>
+                    <div id="lessonMaterials" class="space-y-2"></div>
+                </div>
+                <div class="mt-6">
+                    <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+                        Testni Boshlash
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b">
+                <h3 class="text-xl font-bold">Test</h3>
+            </div>
+            <div class="p-4">
+                <div id="quizQuestions" class="space-y-6">
+                    <!-- Savollar JavaScript orqali yuklanadi -->
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="submitQuiz()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+                        Testni Yakunlash
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Writing Assistant Modal -->
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold">AI Writing Assistant</h3>
+                <button onclick="closeWritingModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <textarea id="writingText" rows="10" 
+                          class="w-full border border-gray-300 rounded-lg p-4 mb-4"
+                          placeholder="Bu yerda ingliz tilida matn yozing..."></textarea>
+                <button onclick="checkWriting()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg mb-4">
+                    Tekshirish
+                </button>
+                <div id="writingResult" class="hidden">
+                    <!-- Natijalar shu yerda ko'rsatiladi -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/register-login.html';
+        }
+
+        let currentCourse = null;
+        let currentLesson = null;
+        let userProgress = null;
+
+        // URL dan kurs ID sini olish
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+
+        // Kurs ma'lumotlarini yuklash
+        async function loadCourse() {
+            try {
+                const response = await fetch(`/api/courses/${courseId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentCourse = data.course;
+                    userProgress = data.progress;
+                    displayCourseInfo();
+                    displayLessons();
+                    loadUserCoins();
+                } else {
+                    alert('Kurs topilmadi');
+                    window.location.href = '/index.html';
+                }
+            } catch (error) {
+                console.error('Xato:', error);
+            }
+        }
+
+        let recognition;
+function startSpeech() {
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            // Serverga yuborish
+            fetch('/api/speech/score', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ score: 85, text }) // Simulyatsiya, haqiqiyda AI bilan
+            }).then(res => res.json()).then(result => alert(result.message));
+        };
+        recognition.start();
+    } else alert('Brauzer speech ni qo\'llab-quvvatlamaydi');
+}
+
+// Flashcards modal qo'shing (o'xshash writing modaliga)
+
+        function displayCourseInfo() {
+            const courseInfo = document.getElementById('courseInfo');
+            courseInfo.innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2">${currentCourse.title}</h1>
+                        <p class="text-gray-600 mb-4">${currentCourse.description}</p>
+                        <div class="flex items-center space-x-4">
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                                ${currentCourse.level}
+                            </span>
+                            <span class="text-gray-600">
+                                O'qituvchi: ${currentCourse.teacher?.firstName || 'Admin'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-0">
+                        <div class="text-lg font-semibold text-gray-800">
+                            Progress: ${userProgress ? Math.round((userProgress.completedLessons.length / currentCourse.lessons.length) * 100) : 0}%
+                        </div>
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mt-2">
+                            <div class="bg-green-600 h-2 rounded-full" 
+                                 style="width: ${userProgress ? (userProgress.completedLessons.length / currentCourse.lessons.length) * 100 : 0}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayLessons() {
+            const lessonsList = document.getElementById('lessonsList');
+            lessonsList.innerHTML = '';
+
+            currentCourse.lessons.forEach((lesson, index) => {
+                const isCompleted = userProgress?.completedLessons.includes(lesson._id);
+                const lessonScore = userProgress?.quizScores.find(q => q.lesson === lesson._id);
+                
+                const lessonCard = `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition duration-200">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-semibold">
+                                    ${index + 1}
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-lg">${lesson.title}</h3>
+                                    <p class="text-gray-600 text-sm">
+                                        ${lesson.materials?.length || 0} material • 
+                                        ${lesson.quiz?.length || 0} savol
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                ${lessonScore ? `
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                                        ${lessonScore.score}/${lessonScore.maxScore}
+                                    </span>
+                                ` : ''}
+                                ${isCompleted ? `
+                                    <span class="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                                        <i class="fas fa-check mr-1"></i> Tugatilgan
+                                    </span>
+                                ` : ''}
+                                <button onclick="openLesson('${lesson._id}')" 
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                    Darsni Ko'rish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                lessonsList.innerHTML += lessonCard;
+            });
+        }
+
+        function openLesson(lessonId) {
+            currentLesson = currentCourse.lessons.find(lesson => lesson._id === lessonId);
+            if (!currentLesson) return;
+
+            document.getElementById('videoTitle').textContent = currentLesson.title;
+            
+            // Video manbasini o'rnatish (agar mavjud bo'lsa)
+            const videoElement = document.getElementById('lessonVideo');
+            if (currentLesson.videoUrl) {
+                videoElement.src = currentLesson.videoUrl;
+            }
+
+            // Materiallarni ko'rsatish
+            const materialsDiv = document.getElementById('lessonMaterials');
+            materialsDiv.innerHTML = '';
+            
+            if (currentLesson.materials && currentLesson.materials.length > 0) {
+                currentLesson.materials.forEach(material => {
+                    materialsDiv.innerHTML += `
+                        <div class="flex items-center justify-between p-2 bg-gray-100 rounded">
+                            <span>${material}</span>
+                            <a href="/uploads/${material}" download 
+                               class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download"></i>
+                            </a>
+                        </div>
+                    `;
+                });
+            } else {
+                materialsDiv.innerHTML = '<p class="text-gray-500">Bu dars uchun materiallar mavjud emas</p>';
+            }
+
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+            const videoElement = document.getElementById('lessonVideo');
+            videoElement.pause();
+            videoElement.currentTime = 0;
+        }
+
+        function startQuiz() {
+            if (!currentLesson || !currentLesson.quiz || currentLesson.quiz.length === 0) {
+                alert('Bu dars uch test mavjud emas');
+                return;
+            }
+
+            displayQuizQuestions();
+            document.getElementById('quizModal').classList.remove('hidden');
+            closeVideoModal();
+        }
+
+        function displayQuizQuestions() {
+            const quizQuestions = document.getElementById('quizQuestions');
+            quizQuestions.innerHTML = '';
+
+            currentLesson.quiz.forEach((question, index) => {
+                const questionHtml = `
+                    <div class="border-b pb-4">
+                        <h4 class="font-semibold mb-3">${index + 1}. ${question.question}</h4>
+                        <div class="space-y-2">
+                            ${question.options.map((option, optIndex) => `
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="question_${index}" value="${optIndex}" 
+                                           class="text-blue-600 focus:ring-blue-500">
+                                    <span>${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                quizQuestions.innerHTML += questionHtml;
+            });
+        }
+
+        async function submitQuiz() {
+            const questions = currentLesson.quiz;
+            let score = 0;
+            const userAnswers = [];
+
+            questions.forEach((question, index) => {
+                const selectedOption = document.querySelector(`input[name="question_${index}"]:checked`);
+                if (selectedOption) {
+                    const answerIndex = parseInt(selectedOption.value);
+                    userAnswers.push(answerIndex);
+                    if (answerIndex === question.correctAnswer) {
+                        score++;
+                    }
+                } else {
+                    userAnswers.push(null);
+                }
+            });
+
+            // Test natijasini serverga yuborish
+            try {
+                const response = await fetch(`/api/courses/${courseId}/lessons/${currentLesson._id}/quiz`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        score: score,
+                        maxScore: questions.length
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(`Test natijasi: ${score}/${questions.length}\n${result.coinsAdded ? result.coinsAdded + ' coin qo\'shildi!' : ''}`);
+                    document.getElementById('quizModal').classList.add('hidden');
+                    loadCourse(); // Progressni yangilash
+                    loadUserCoins(); // Coinlarni yangilash
+                }
+            } catch (error) {
+                console.error('Xato:', error);
+            }
+        }
+
+        function openWritingAssistant() {
+            document.getElementById('writingModal').classList.remove('hidden');
+        }
+
+        function closeWritingModal() {
+            document.getElementById('writingModal').classList.add('hidden');
+        }
+
+        async function checkWriting() {
+            const text = document.getElementById('writingText').value;
+            if (!text.trim()) {
+                alert('Iltimos, tekshirish uchun matn kiriting');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/ai/writing-check', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const result = await response.json();
+                displayWritingResult(result);
+            } catch (error) {
+                console.error('Xato:', error);
+            }
+        }
+
+        function displayWritingResult(result) {
+            const resultDiv = document.getElementById('writingResult');
+            resultDiv.classList.remove('hidden');
+            
+            let mistakesHtml = '';
+            if (result.grammarMistakes.length > 0) {
+                mistakesHtml = `
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-red-600 mb-2">Grammatik Xatolar:</h4>
+                        ${result.grammarMistakes.map(mistake => `
+                            <div class="bg-red-50 border border-red-200 rounded p-3 mb-2">
+                                <p><strong>Xato:</strong> "${mistake.mistake}"</p>
+                                <p><strong>To'g'ri:</strong> "${mistake.correction}"</p>
+                                <p><strong>Izoh:</strong> ${mistake.explanation}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            let suggestionsHtml = '';
+            if (result.suggestions.length > 0) {
+                suggestionsHtml = `
+                    <div class="mb-4">
+                        <h4 class="font-semibold text-blue-600 mb-2">Takliflar:</h4>
+                        <ul class="list-disc list-inside space-y-1">
+                            ${result.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-center mb-4">
+                        <h4 class="text-xl font-bold">Writing Bahosi: ${result.score}/10</h4>
+                        <p class="text-gray-600">${result.overallFeedback}</p>
+                    </div>
+                    ${mistakesHtml}
+                    ${suggestionsHtml}
+                </div>
+            `;
+        }
+
+        async function loadUserCoins() {
+            try {
+                // Foydalanuvchi ma'lumotlarini olish uchun profil API dan foydalanish
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('coinsCount').textContent = userData.user.coins;
+                }
+            } catch (error) {
+                console.error('Coinlarni yuklashda xato:', error);
+            }
+        }
+
+        // Writing assistant tugmasini qo'shish
+        document.addEventListener('DOMContentLoaded', () => {
+            const nav = document.querySelector('nav .container');
+            const writingBtn = document.createElement('button');
+            writingBtn.className = 'bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center';
+            writingBtn.innerHTML = '<i class="fas fa-robot mr-2"></i> AI Writing';
+            writingBtn.onclick = openWritingAssistant;
+            
+            nav.querySelector('.flex').insertBefore(writingBtn, nav.querySelector('.flex').lastElementChild);
+        });
+
+        // Sahifa yuklanganda kursni yuklash
+        document.addEventListener('DOMContentLoaded', loadCourse);
+    </script>
+</body>
+</html>

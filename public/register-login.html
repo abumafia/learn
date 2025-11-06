@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish / Ro'yxat | EnglishMaster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style> body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); } </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md animate-in fade-in">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">EnglishMaster</h1>
+            <p class="text-gray-600">Ingliz tilini o'rganing!</p>
+        </div>
+        <div id="registerForm" class="space-y-4">
+            <input type="text" id="username" placeholder="Username" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <input type="password" id="password" placeholder="Parol (6+ belgilar)" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <input type="text" id="firstName" placeholder="Ism" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <input type="text" id="lastName" placeholder="Familiya" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <select id="englishLevel" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+                <option value="beginner">Boshlang'ich</option>
+                <option value="intermediate">O'rta</option>
+                <option value="advanced">Ilg'or</option>
+            </select>
+            <button onclick="register()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">Ro'yxatdan o'tish</button>
+        </div>
+        <div id="loginForm" class="space-y-4 hidden">
+            <input type="text" id="loginUsername" placeholder="Username" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <input type="password" id="loginPassword" placeholder="Parol" class="w-full p-3 border rounded-lg focus:outline-none focus:border-purple-500">
+            <button onclick="login()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">Kirish</button>
+        </div>
+        <p class="text-center mt-4"> <a href="#" onclick="toggleForm()" class="text-purple-600 hover:underline">Boshqa usul?</a></p>
+    </div>
+    <script>
+        function toggleForm() {
+            document.getElementById('registerForm').classList.toggle('hidden');
+            document.getElementById('loginForm').classList.toggle('hidden');
+        }
+
+        async function register() {
+            const data = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                englishLevel: document.getElementById('englishLevel').value
+            };
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                localStorage.setItem('token', result.token);
+                window.location.href = '/';
+            } else {
+                alert(result.message);
+            }
+        }
+
+        async function login() {
+            const data = {
+                username: document.getElementById('loginUsername').value,
+                password: document.getElementById('loginPassword').value
+            };
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.ok) {
+                localStorage.setItem('token', result.token);
+                window.location.href = '/';
+            } else {
+                alert(result.message);
+            }
+        }
+    </script>
+</body>
+</html>
