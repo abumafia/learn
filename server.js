@@ -1800,6 +1800,41 @@ app.get('/api/reading-practice', authenticateToken, async (req, res) => {
     res.json(reading);
 });
 
+// Chatbot API (OpenAI yoki simulyatsiya bilan)
+app.post('/api/chatbot/message', authenticateToken, async (req, res) => {
+    try {
+        const { message, userId } = req.body;
+        // Progress olish
+        const progress = await Progress.find({ user: userId }).populate('course', 'title level');
+        const user = await User.findById(userId).select('englishLevel coins');
+        // Tavsiyalar generatsiya (simulyatsiya yoki OpenAI)
+        let response = `Sizning progress: ${user.englishLevel} daraja, ${progress.length} kurs. `;
+        if (message.includes('progress')) {
+            response += `Tugatilgan darslar: ${progress.reduce((sum, p) => sum + p.completedLessons.length, 0)}. `;
+        }
+        if (message.includes('tavsiya') || message.includes('kurs')) {
+            const recommendations = await Course.find({ level: user.englishLevel, isActive: true }).limit(3).select('title');
+            response += 'Tavsiya kurslar: ' + recommendations.map(r => `<a href="/course/${r._id}">${r.title}</a>`).join(', ') + '. Profilga o\'tish: /profile';
+        } else {
+            response += 'Grammatika maslahati: "I am" ishlatishni o\'rganing. Batafsil uchun "grammatika" deb yozing.';
+        }
+        res.json({ response });
+    } catch (error) {
+        res.status(500).json({ message: 'Chatbot xatosi' });
+    }
+});
+
+// Tavsiyalar API
+app.get('/api/recommendations', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('englishLevel');
+        const recs = await Course.find({ level: user.englishLevel, isActive: true }).limit(5);
+        res.json(recs);
+    } catch (error) {
+        res.status(500).json({ message: 'Tavsiyalar xatosi' });
+    }
+});
+
 // Static fayllar
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
