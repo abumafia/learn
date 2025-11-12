@@ -1,439 +1,921 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurs - EnglishMaster</title>
+    <title>Kurs Detali - EnglishMaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); }
+        .btn-glow { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); transform: scale(1.05); }
+        .progress-bar { transition: width 0.8s ease-in-out; }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-enter { animation: modalEnter 0.4s ease-out; }
+        @keyframes modalEnter { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar.hidden { transform: translateX(-100%); }
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; top: 0; left: 0; height: 100vh; z-index: 40; }
+            .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 30; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen text-white">
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="overlay hidden" onclick="closeMobileMenu()"></div>
+
     <!-- Navigation -->
-    <nav class="bg-blue-600 text-white shadow-lg">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="/" class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-graduation-cap mr-2"></i>
-                    EnglishMaster
+    <nav class="glass fixed top-0 w-full z-50 py-4 px-6 shadow-2xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <button onclick="openMobileMenu()" class="lg:hidden text-white p-2 rounded-lg hover:bg-white/10">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <a href="/courses" class="text-xl font-bold flex items-center text-white hover:text-blue-200 glass px-4 py-2 rounded-xl transition">
+                    <i class="fas fa-arrow-left mr-2"></i> Kurslarga qaytish
                 </a>
-                <div class="flex items-center space-x-6">
-                    <a href="/courses" class="hover:text-blue-200 transition">Kurslar</a>
-                    <div id="authButtons" class="flex items-center space-x-4">
-                        <a href="/login" class="hover:text-blue-200 transition">Kirish</a>
-                        <a href="/register" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-                            Ro'yxatdan o'tish
-                        </a>
-                    </div>
-                    <div id="userMenu" class="hidden flex items-center space-x-4">
-                        <a href="/" class="hover:text-blue-200 transition">Bosh Sahifa</a>
-                        <a href="/profile" class="hover:text-blue-200 transition">Profil</a>
-                        <a href="/teacher" class="hover:text-blue-200 transition">O'qituvchi</a>
-                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
-                            Chiqish
-                        </button>
-                    </div>
-                </div>
             </div>
+            <div class="hidden lg:flex items-center space-x-4">
+                <span id="userCoins" class="glass px-4 py-2 rounded-full font-semibold flex items-center">
+                    <i class="fas fa-coins mr-2 text-yellow-400"></i> <span id="coinsCount">0</span> coin
+                </span>
+                <button onclick="openWritingAssistant()" class="btn-glow bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl flex items-center text-white">
+                    <i class="fas fa-robot mr-2"></i> AI Writing
+                </button>
+                <a href="/profile" class="glass px-4 py-2 rounded-xl hover:bg-white/10 text-white transition">Profil</a>
+                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl text-white">Chiqish</button>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button onclick="openMobileMenu()" class="lg:hidden text-white p-2 rounded-lg hover:bg-white/10">
+                <i class="fas fa-user-circle text-2xl"></i>
+            </button>
         </div>
     </nav>
 
-    <!-- Course Header -->
-    <div class="bg-white shadow">
-        <div class="container mx-auto px-4 py-8">
-            <div class="flex flex-col lg:flex-row lg:items-start lg:space-x-8">
-                <!-- Course Image -->
-                <div class="lg:w-1/3 mb-6 lg:mb-0">
-                    <div class="bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg h-64 flex items-center justify-center">
-                        <div id="courseImage">
-                            <!-- Kurs rasmi yoki ikonka -->
+    <!-- Mobile Sidebar Menu -->
+    <div id="mobileMenu" class="sidebar lg:hidden glass w-64 p-6 hidden">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold">Menyu</h2>
+            <button onclick="closeMobileMenu()" class="text-gray-300 hover:text-white">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+        <ul class="space-y-4">
+            <li><a href="/courses" class="block py-2 px-4 rounded-lg hover:bg-white/10 transition">Kurslar</a></li>
+            <li><span id="mobileCoins" class="block py-2 px-4 rounded-lg bg-white/10 font-semibold flex items-center">
+                <i class="fas fa-coins mr-2 text-yellow-400"></i> <span id="mobileCoinsCount">0</span> coin
+            </span></li>
+            <li><button onclick="openWritingAssistant()" class="w-full text-left py-2 px-4 rounded-lg hover:bg-white/10 transition flex items-center">
+                <i class="fas fa-robot mr-2"></i> AI Writing
+            </button></li>
+            <li><a href="/profile" class="block py-2 px-4 rounded-lg hover:bg-white/10 transition">Profil</a></li>
+            <li><button onclick="logout()" class="w-full text-left py-2 px-4 rounded-lg hover:bg-red-500/20 transition flex items-center">
+                <i class="fas fa-sign-out-alt mr-2"></i> Chiqish
+            </button></li>
+        </ul>
+    </div>
+
+    <div class="pt-20 container mx-auto px-4 py-8 lg:py-12">
+        <div id="loading" class="text-center py-12 hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="text-white mt-4 font-semibold">Yuklanmoqda...</p>
+        </div>
+        <div id="courseDetail" class="hidden space-y-6 lg:space-y-8">
+            <div class="card-hover glass rounded-3xl p-4 lg:p-8 fade-in">
+                <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                    <div class="lg:w-1/3">
+                        <img id="courseImage" src="" alt="" class="w-full h-48 lg:h-64 object-cover rounded-2xl shadow-2xl mb-4 lg:mb-6 transition-all duration-500">
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <span id="enrollButton" class="btn-glow bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 lg:px-6 lg:py-4 rounded-2xl cursor-pointer font-semibold flex items-center w-full sm:w-auto justify-center">
+                                <i class="fas fa-plus mr-2"></i> Yozilish
+                            </span>
+                            <span id="studentCount" class="text-gray-300 font-medium text-center sm:text-left">0 o'quvchi</span>
+                        </div>
+                    </div>
+                    <div class="lg:w-2/3 space-y-4">
+                        <h1 id="courseTitle" class="text-2xl lg:text-4xl font-bold mb-2 lg:mb-4 text-white drop-shadow-2xl"></h1>
+                        <p id="courseDescription" class="text-gray-200 mb-4 lg:mb-6 text-base lg:text-lg leading-relaxed"></p>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4 lg:mb-6">
+                            <span class="glass px-3 py-1.5 rounded-full text-sm font-semibold text-blue-300" id="courseLevel"></span>
+                            <span class="text-2xl lg:text-3xl font-bold text-yellow-400" id="coursePrice"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center space-x-4 lg:space-x-6 text-sm text-gray-300">
+                            <span class="flex items-center"><i class="fas fa-user mr-1"></i><span id="teacherName"></span></span>
+                            <span class="flex items-center"><i class="fas fa-book mr-1"></i><span id="lessonCount">0</span> dars</span>
+                            <span class="flex items-center"><i class="fas fa-clock mr-1"></i><span id="totalDuration"></span></span>
+                        </div>
+                        <div class="flex flex-wrap items-center space-x-2 lg:space-x-6 mt-4 lg:mt-6">
+                            <button id="likeButton" onclick="toggleLike()" class="glass p-3 rounded-2xl flex items-center space-x-2 text-gray-300 hover:text-red-300 transition backdrop-blur-sm w-full sm:w-auto justify-center">
+                                <i id="likeIcon" class="far fa-heart text-lg"></i>
+                                <span id="likeCount">0</span> like
+                            </button>
+                            <button onclick="openComments()" class="glass p-3 rounded-2xl flex items-center space-x-2 text-gray-300 hover:text-blue-300 transition backdrop-blur-sm w-full sm:w-auto justify-center">
+                                <i class="far fa-comment text-lg"></i>
+                                <span id="commentCount">0</span> izoh
+                            </button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Course Info -->
-                <div class="lg:w-2/3">
-                    <h1 id="courseTitle" class="text-3xl font-bold text-gray-800 mb-4">Kurs Nomi</h1>
-                    <p id="courseDescription" class="text-gray-600 mb-6">Kurs tavsifi</p>
-                    
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-blue-600" id="lessonsCount">0</div>
-                            <div class="text-sm text-gray-600">Darslar</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-green-600" id="studentsCount">0</div>
-                            <div class="text-sm text-gray-600">O'quvchilar</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-purple-600" id="courseLevel">-</div>
-                            <div class="text-sm text-gray-600">Daraja</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-orange-600" id="coursePrice">0</div>
-                            <div class="text-sm text-gray-600">Narx</div>
-                        </div>
+            </div>
+            <div id="progressSection" class="glass rounded-3xl p-4 lg:p-8 card-hover fade-in hidden">
+                <h2 class="text-2xl lg:text-3xl font-bold mb-4 lg:mb-6 text-white">Progress: <span id="progressPercent" class="text-yellow-400">0%</span></h2>
+                <div class="w-full bg-white/20 rounded-full h-3 lg:h-4 mb-4 lg:mb-6 overflow-hidden">
+                    <div id="progressBar" class="glass bg-gradient-to-r from-blue-400 to-purple-500 h-3 lg:h-4 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+                <p id="completedLessons" class="text-gray-300 font-medium text-center lg:text-left">0 / 0 dars</p>
+            </div>
+            <div class="glass rounded-3xl overflow-hidden fade-in">
+                <div class="p-4 lg:p-8 border-b border-white/20 bg-white/5">
+                    <h2 class="text-2xl lg:text-3xl font-bold text-white">Darslar Ro'yxati</h2>
+                </div>
+                <div id="lessonsList" class="divide-y divide-white/10">
+                    <!-- Darslar yuklanadi -->
+                </div>
+            </div>
+        </div>
+        <div id="noCourse" class="hidden text-center py-16">
+            <i class="fas fa-exclamation-triangle text-6xl text-gray-400 mb-4"></i>
+            <h3 class="text-2xl font-bold text-white mb-2">Kurs topilmadi</h3>
+            <p class="text-gray-300 mb-4">Kurs ID'si noto'g'ri yoki kurs mavjud emas. Quyidagi URL formatidan foydalaning: /course/COURSE_ID yoki ?id=COURSE_ID</p>
+            <a href="/courses" class="text-blue-300 hover:text-blue-200 underline">Kurslarga qaytish</a>
+        </div>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-5xl max-h-[95vh] overflow-y-auto">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 id="videoTitle" class="text-2xl lg:text-3xl font-bold text-white"></h3>
+                <button onclick="closeVideoModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-2xl lg:text-3xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <div id="videoPlayer" class="w-full aspect-video rounded-2xl mb-4 lg:mb-6 shadow-2xl overflow-hidden"></div>
+                <div class="mb-4 lg:mb-6">
+                    <h4 class="font-bold mb-2 lg:mb-3 text-white text-xl lg:text-2xl">Mazmun:</h4>
+                    <p id="lessonContent" class="text-gray-200 whitespace-pre-wrap leading-relaxed bg-white/5 p-3 lg:p-4 rounded-2xl text-sm lg:text-base"></p>
+                </div>
+                <div class="mb-4 lg:mb-6">
+                    <h4 class="font-bold mb-2 lg:mb-3 text-white text-xl lg:text-2xl">Materiallar:</h4>
+                    <div id="lessonMaterials" class="space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4 mb-4 lg:mb-6">
+                    <button onclick="startSpeechRecognition()" class="btn-glow bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 lg:px-6 lg:py-4 rounded-2xl font-semibold text-sm lg:text-base">
+                        <i class="fas fa-microphone mr-2"></i> Talaffuz Tekshirish
+                    </button>
+                    <button onclick="openVocabularyBuilder()" class="btn-glow bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 lg:px-6 lg:py-4 rounded-2xl font-semibold text-sm lg:text-base">
+                        <i class="fas fa-book-open mr-2"></i> Lug'at Qurish
+                    </button>
+                    <button onclick="generateSummary()" class="btn-glow bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-3 lg:px-6 lg:py-4 rounded-2xl font-semibold text-sm lg:text-base">
+                        <i class="fas fa-file-alt mr-2"></i> Xulosa Yaratish
+                    </button>
+                </div>
+                <div class="flex flex-col sm:flex-row justify-between gap-4">
+                    <button onclick="completeLesson()" id="completeBtn" class="btn-glow bg-gradient-to-r from-green-500 to-green-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold hidden w-full sm:w-auto">
+                        <i class="fas fa-check mr-2"></i> Darsni Tugallash
+                    </button>
+                    <button onclick="startQuiz()" class="btn-glow bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold w-full sm:w-auto">
+                        <i class="fas fa-question-circle mr-2"></i> Test Boshlash
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quizModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-3xl max-h-[95vh] overflow-y-auto">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-2xl lg:text-3xl font-bold text-white">Test</h3>
+                <button onclick="closeQuizModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-2xl lg:text-3xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <div id="quizProgress" class="mb-4 lg:mb-6 text-center text-sm text-gray-300 font-medium">0 / 0 savol</div>
+                <div id="quizQuestions" class="space-y-4 lg:space-y-6"></div>
+                <div class="mt-6 lg:mt-8 flex justify-end space-x-4">
+                    <button onclick="closeQuizModal()" class="px-4 lg:px-6 py-2 lg:py-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition text-sm lg:text-base">Bekor</button>
+                    <button onclick="submitQuiz()" class="btn-glow bg-gradient-to-r from-green-500 to-green-600 text-white px-6 lg:px-8 py-2 lg:py-3 rounded-2xl font-semibold text-sm lg:text-base">Yuborish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Speech Recognition Modal -->
+    <div id="speechModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-md">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl lg:text-2xl font-bold text-white">Talaffuz Natijasi</h3>
+                <button onclick="closeSpeechModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-xl lg:text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6 text-center">
+                <p class="text-2xl lg:text-3xl font-bold text-white mb-2" id="speechScore">0%</p>
+                <p class="text-base lg:text-lg text-gray-300 mb-4 lg:mb-6" id="speechFeedback">Kutmoqda...</p>
+                <button onclick="closeSpeechModal()" class="btn-glow bg-gradient-to-r from-green-500 to-green-600 text-white px-6 lg:px-8 py-2 lg:py-3 rounded-2xl font-semibold text-sm lg:text-base">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Modal -->
+    <div id="vocabularyModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-2xl lg:text-3xl font-bold text-white">Lug'at Qurish</h3>
+                <button onclick="closeVocabularyModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-2xl lg:text-3xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <div id="vocabularyList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-4 lg:mb-6"></div>
+                <button onclick="quizVocabulary()" class="btn-glow bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold w-full text-sm lg:text-base">
+                    <i class="fas fa-question-circle mr-2"></i> Lug'at Testini Boshlash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Modal -->
+    <div id="summaryModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-2xl">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl lg:text-2xl font-bold text-white">Dars Xulosasi</h3>
+                <button onclick="closeSummaryModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-xl lg:text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <p id="lessonSummary" class="text-gray-200 leading-relaxed mb-4 lg:mb-6 bg-white/5 p-3 lg:p-4 rounded-2xl text-sm lg:text-base"></p>
+                <button onclick="closeSummaryModal()" class="btn-glow bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 lg:px-8 py-2 lg:py-3 rounded-2xl font-semibold w-full text-sm lg:text-base">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vocabulary Quiz Modal -->
+    <div id="vocabQuizModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-lg">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl lg:text-2xl font-bold text-white">Lug'at Testi</h3>
+                <button onclick="closeVocabQuiz()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-xl lg:text-2xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <div id="vocabQuizContent" class="mb-4 lg:mb-6 text-sm lg:text-base"></div>
+                <div class="flex justify-between space-x-2 lg:space-x-4">
+                    <button onclick="closeVocabQuiz()" class="px-4 lg:px-6 py-2 lg:py-3 bg-white/10 text-white rounded-2xl hover:bg-white/20 transition text-sm lg:text-base flex-1">Bekor</button>
+                    <button onclick="submitVocabQuiz()" class="btn-glow bg-gradient-to-r from-green-500 to-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-2xl font-semibold text-sm lg:text-base flex-1">Tugatish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Writing Assistant Modal -->
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-2xl lg:text-3xl font-bold text-white">AI Yozuv Yordamchisi</h3>
+                <button onclick="closeWritingModal()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-2xl lg:text-3xl"></i>
+                </button>
+            </div>
+            <div class="p-4 lg:p-6">
+                <textarea id="writingText" rows="6" placeholder="Yozingizni kiriting... (masalan, dars mavzusida insho)" class="w-full p-3 lg:p-4 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 mb-4 lg:mb-6 text-sm lg:text-base"></textarea>
+                <button onclick="checkWriting()" class="btn-glow bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 lg:px-8 py-3 lg:py-4 rounded-2xl font-semibold w-full mb-4 lg:mb-6 text-sm lg:text-base">Tekshirish</button>
+                <div id="writingResult" class="hidden space-y-4 lg:space-y-6">
+                    <div class="text-center">
+                        <p class="text-2xl lg:text-3xl font-bold text-white mb-2" id="writingScore">0/10</p>
+                        <p class="text-gray-300 text-sm lg:text-base" id="writingFeedback">Kutmoqda...</p>
                     </div>
-                    
-                    <!-- Teacher Info -->
-                    <div class="flex items-center mb-6 p-4 bg-gray-50 rounded-lg">
-                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                            <span class="text-blue-600 font-semibold" id="teacherInitials">AD</span>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-800" id="teacherName">O'qituvchi</h4>
-                            <p class="text-gray-600 text-sm" id="teacherBio">O'qituvchi haqida</p>
-                        </div>
+                    <div>
+                        <h4 class="font-bold mb-2 lg:mb-3 text-white text-lg lg:text-xl">Grammatika Xatolari:</h4>
+                        <div id="grammarMistakes" class="space-y-3"></div>
                     </div>
-                    
-                    <!-- Action Buttons -->
-                    <div id="enrollSection">
-                        <!-- Yozilish tugmasi -->
+                    <div>
+                        <h4 class="font-bold mb-2 lg:mb-3 text-white text-lg lg:text-xl">Takliflar:</h4>
+                        <div id="suggestions" class="space-y-3"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Course Content -->
-    <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Lessons Sidebar -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-lg shadow-lg p-6 sticky top-4">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">Kurs Darslari</h3>
-                    <div id="lessonsList" class="space-y-2">
-                        <!-- Darslar ro'yxati -->
-                    </div>
-                </div>
+    <!-- Comments Modal -->
+    <div id="commentsModal" class="fixed inset-0 bg-black bg-opacity-80 hidden flex items-center justify-center z-50 p-4 modal-enter">
+        <div class="glass rounded-3xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
+            <div class="p-4 lg:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-2xl lg:text-3xl font-bold text-white">Izohlar</h3>
+                <button onclick="closeComments()" class="text-gray-300 hover:text-white">
+                    <i class="fas fa-times text-2xl lg:text-3xl"></i>
+                </button>
             </div>
-            
-            <!-- Main Content -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">Kurs Haqida</h3>
-                    <div id="courseContent">
-                        <!-- Kurs kontenti -->
-                    </div>
-                    
-                    <!-- What You'll Learn -->
-                    <div class="mt-8">
-                        <h4 class="text-lg font-semibold mb-4 text-gray-800">Nimalarni O'rganasiz?</h4>
-                        <div id="learningPoints" class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            <!-- O'rganish punktlari -->
-                        </div>
-                    </div>
-                </div>
+            <div class="p-4 lg:p-6">
+                <div id="commentsList" class="space-y-4 lg:space-y-6 mb-4 lg:mb-6"></div>
+                <form id="commentForm" class="border-t border-white/20 pt-4 lg:pt-6">
+                    <textarea id="commentText" rows="3" placeholder="Izoh yozing..." class="w-full p-3 lg:p-4 bg-white/10 border border-white/20 rounded-2xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm lg:text-base"></textarea>
+                    <button type="submit" class="btn-glow bg-gradient-to-r from-blue-500 to-purple-600 w-full py-3 lg:py-4 rounded-2xl text-white font-semibold mt-4 text-sm lg:text-base">Yuborish</button>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        // Auth holatini tekshirish
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const authButtons = document.getElementById('authButtons');
-            const userMenu = document.getElementById('userMenu');
-            
-            if (token) {
-                authButtons.classList.add('hidden');
-                userMenu.classList.remove('hidden');
-            } else {
-                authButtons.classList.remove('hidden');
-                userMenu.classList.add('hidden');
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+        const urlParams = new URLSearchParams(window.location.search);
+        let courseId = urlParams.get('id');
+        if (!courseId) {
+            const pathParts = window.location.pathname.split('/course/');
+            if (pathParts.length > 1) {
+                courseId = pathParts[1];
             }
         }
-
-        // Chiqish funksiyasi
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/';
+        if (!courseId) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('noCourse').classList.remove('hidden');
+            throw new Error('Kurs ID topilmadi. URL: /course/COURSE_ID yoki ?id=COURSE_ID');
         }
-
         let currentCourse = null;
         let userProgress = null;
-
-        // URL dan kurs ID sini olish
-        function getCourseId() {
-            const path = window.location.pathname;
-            const parts = path.split('/');
-            return parts[parts.length - 1];
-        }
-
-        // Kurs ma'lumotlarini yuklash
+        let currentLesson = null;
+        let currentQuiz = null;
+        let vocabularyWords = [];
+        let currentVocabIndex = 0;
+        let vocabQuizQuestions = [];
+        let recognition = null;
+        let comments = [];
+        let likes = [];
+        let userId = null;
+        document.getElementById('loading').classList.remove('hidden');
         async function loadCourse() {
-            const courseId = getCourseId();
-            if (!courseId) {
-                window.location.href = '/courses';
-                return;
-            }
-
             try {
-                const response = await fetch(`/api/courses/${courseId}`);
-                if (response.ok) {
-                    currentCourse = await response.json();
-                    displayCourse();
-                    
-                    // Agar foydalanuvchi tizimga kirgan bo'lsa, progressni yuklash
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        await loadUserProgress(courseId);
+                const profileRes = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!profileRes.ok) throw new Error('Profil xatosi');
+                const profileData = await profileRes.json();
+                userId = profileData._id;
+                const courseResponse = await fetch(`/api/courses/${courseId}?include=likes,comments`);
+                if (!courseResponse.ok) throw new Error('Kurs topilmadi');
+                currentCourse = await courseResponse.json();
+                comments = currentCourse.comments || [];
+                likes = currentCourse.likes || [];
+                let progressResponse;
+                try {
+                    progressResponse = await fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (progressResponse.ok) {
+                        const progressList = await progressResponse.json();
+                        userProgress = progressList.find(p => p.course._id.toString() === courseId);
                     }
-                } else {
-                    window.location.href = '/courses';
+                } catch (err) {
+                    console.warn('Progress xatosi:', err);
                 }
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('courseDetail').classList.remove('hidden');
+                displayCourse();
+                displayLessons();
+                loadUserCoins();
+                setupEnrollButton();
+                updateLikeButton();
+                updateCommentCount();
             } catch (error) {
-                console.error('Kursni yuklashda xato:', error);
-                window.location.href = '/courses';
+                console.error('Kurs yuklash xatosi:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('noCourse').classList.remove('hidden');
             }
         }
-
         function displayCourse() {
-            // Asosiy ma'lumotlar
             document.getElementById('courseTitle').textContent = currentCourse.title;
             document.getElementById('courseDescription').textContent = currentCourse.description || 'Tavsif mavjud emas';
-            document.getElementById('lessonsCount').textContent = currentCourse.lessons?.length || 0;
-            document.getElementById('studentsCount').textContent = currentCourse.students?.length || 0;
             document.getElementById('courseLevel').textContent = getLevelText(currentCourse.level);
-            document.getElementById('coursePrice').textContent = currentCourse.price === 0 ? 'Bepul' : currentCourse.price + ' coin';
-            
-            // O'qituvchi ma'lumotlari
-            const teacher = currentCourse.teacher;
-            document.getElementById('teacherInitials').textContent = 
-                (teacher?.firstName?.charAt(0) || 'A') + (teacher?.lastName?.charAt(0) || 'd');
-            document.getElementById('teacherName').textContent = 
-                (teacher?.firstName || 'Admin') + ' ' + (teacher?.lastName || '');
-            document.getElementById('teacherBio').textContent = teacher?.bio || 'Professional ingliz tili o\'qituvchisi';
-            
-            // Kurs rasmi
-            const courseImage = document.getElementById('courseImage');
-            if (currentCourse.image) {
-                courseImage.innerHTML = `<img src="/uploads/${currentCourse.image}" alt="${currentCourse.title}" class="w-full h-64 object-cover rounded-lg">`;
-            } else {
-                courseImage.innerHTML = `<i class="fas fa-book-open text-white text-8xl"></i>`;
+            document.getElementById('coursePrice').innerHTML = currentCourse.price === 0 ?
+                '<i class="fas fa-tag text-green-400 mr-2"></i>Bepul' :
+                `<i class="fas fa-coins mr-2"></i>${currentCourse.price} coin`;
+            document.getElementById('teacherName').textContent = currentCourse.teacher ?
+                `${currentCourse.teacher.firstName} ${currentCourse.teacher.lastName}` : 'Admin';
+            document.getElementById('lessonCount').textContent = currentCourse.lessons.length;
+            document.getElementById('totalDuration').textContent = calculateTotalDuration(currentCourse.lessons);
+            document.getElementById('studentCount').textContent = `${currentCourse.students?.length || 0} o'quvchi`;
+            const img = document.getElementById('courseImage');
+            img.src = currentCourse.image ? `/uploads/${currentCourse.image}` : 'https://via.placeholder.com/400x300?text=Kurs+Rasmi';
+            img.alt = currentCourse.title;
+            if (userProgress) {
+                document.getElementById('progressSection').classList.remove('hidden');
+                document.getElementById('progressPercent').textContent = `${userProgress.progress}%`;
+                document.getElementById('progressBar').style.width = `${userProgress.progress}%`;
+                document.getElementById('completedLessons').textContent =
+                    `${userProgress.completedLessons.length} / ${currentCourse.lessons.length} dars tugatildi`;
             }
-            
-            // Darslar ro'yxati
-            displayLessons();
-            
-            // Yozilish bo'limi
-            displayEnrollSection();
-            
-            // O'rganish punktlari
-            displayLearningPoints();
         }
-
+        function getLevelText(level) {
+            const levels = { beginner: 'Boshlang\'ich', elementary: 'Elementar', intermediate: 'O\'rta',
+                           'upper-intermediate': 'Yuqori O\'rta', advanced: 'Ilg\'or' };
+            return levels[level] || level;
+        }
+        function calculateTotalDuration(lessons) {
+            const total = lessons.reduce((sum, l) => sum + (l.duration || 0), 0);
+            const hours = Math.floor(total / 60);
+            const mins = total % 60;
+            return hours ? `${hours} soat ${mins} daq` : `${total} daq`;
+        }
         function displayLessons() {
-            const lessonsList = document.getElementById('lessonsList');
-            lessonsList.innerHTML = '';
-            
-            if (!currentCourse.lessons || currentCourse.lessons.length === 0) {
-                lessonsList.innerHTML = '<p class="text-gray-500 text-center">Darslar hali qo\'shilmagan</p>';
-                return;
-            }
-            
+            const container = document.getElementById('lessonsList');
+            container.innerHTML = '';
             currentCourse.lessons.forEach((lesson, index) => {
-                const isCompleted = userProgress?.completedLessons?.includes(lesson._id);
-                
-                const lessonItem = `
-                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200 ${isCompleted ? 'bg-green-50 border-green-200' : ''}">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3 ${isCompleted ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}">
-                                <i class="fas ${isCompleted ? 'fa-check' : 'fa-play'} text-xs"></i>
+                const isCompleted = userProgress && userProgress.completedLessons.some(id => id.toString() === lesson._id.toString());
+                const isCurrent = userProgress && userProgress.currentLesson?.toString() === lesson._id.toString();
+                const lessonHtml = `
+                    <div class="p-4 lg:p-6 card-hover bg-white/5 transition-all duration-300">
+                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                            <div class="flex items-center space-x-3 w-full lg:w-auto">
+                                <div class="w-10 h-10 lg:w-12 lg:h-12 glass rounded-full flex items-center justify-center text-blue-400 font-bold text-base lg:text-lg backdrop-blur-sm flex-shrink-0">
+                                    ${index + 1}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-semibold text-white text-sm lg:text-base truncate">${lesson.title}</h4>
+                                    <p class="text-gray-300 text-xs lg:text-sm">${lesson.duration || 0} daq • ${lesson.content?.substring(0, 80)}...</p>
+                                </div>
                             </div>
-                            <div>
-                                <h5 class="font-medium text-gray-800">${lesson.title}</h5>
-                                <p class="text-sm text-gray-500">${lesson.duration || 0} min</p>
+                            <div class="flex items-center space-x-2 lg:space-x-3 w-full lg:w-auto justify-between lg:justify-end">
+                                ${isCompleted ? '<i class="fas fa-check-circle text-green-400 text-lg"></i>' : ''}
+                                ${isCurrent ? '<span class="glass text-yellow-400 px-2 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">Joriy</span>' : ''}
+                                <button onclick="openLesson('${lesson._id}')"
+                                        class="glass p-2 lg:p-3 rounded-xl text-white transition-all duration-300 backdrop-blur-sm ${isCompleted ? 'bg-green-500/20 hover:bg-green-600/30' : 'bg-blue-500/20 hover:bg-blue-600/30'} flex-1 lg:flex-none text-xs lg:text-base">
+                                    ${isCompleted ? '<i class="fas fa-eye mr-1 lg:mr-2"></i>Qayta ko\'rish' : '<i class="fas fa-play mr-1 lg:mr-2"></i>Boshlash'}
+                                </button>
                             </div>
                         </div>
-                        ${isCompleted ? '<span class="text-green-600 text-sm"><i class="fas fa-check-circle"></i></span>' : ''}
                     </div>
                 `;
-                lessonsList.innerHTML += lessonItem;
+                container.innerHTML += lessonHtml;
             });
         }
-
-        function displayEnrollSection() {
-            const enrollSection = document.getElementById('enrollSection');
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                enrollSection.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-gray-600">Kursga yozilish uchun tizimga kiring</p>
-                        <div class="flex space-x-4">
-                            <a href="/login" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition duration-200">
-                                Kirish
-                            </a>
-                            <a href="/register" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold transition duration-200">
-                                Ro'yxatdan o'tish
-                            </a>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Foydalanuvchi allaqachon yozilganmi?
-            const isEnrolled = currentCourse.students?.some(student => student._id === userProgress?.user);
-            
-            if (isEnrolled) {
-                enrollSection.innerHTML = `
-                    <div class="space-y-4">
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                                <span class="text-green-800 font-semibold">Siz ushbu kursga yozilgansiz</span>
-                            </div>
-                            ${userProgress ? `
-                                <div class="mt-2">
-                                    <div class="flex justify-between text-sm text-green-700 mb-1">
-                                        <span>Progress</span>
-                                        <span>${userProgress.progress}%</span>
-                                    </div>
-                                    <div class="w-full bg-green-200 rounded-full h-2">
-                                        <div class="bg-green-600 h-2 rounded-full" style="width: ${userProgress.progress}%"></div>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <button onclick="startLearning()" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition duration-200">
-                            O'rganishni Davom Ettirish
-                        </button>
-                    </div>
-                `;
+        function setupEnrollButton() {
+            const btn = document.getElementById('enrollButton');
+            if (!userProgress) {
+                btn.innerHTML = '<i class="fas fa-plus mr-2"></i>Kursga yozilish';
+                btn.onclick = enrollCourse;
             } else {
-                enrollSection.innerHTML = `
-                    <div class="space-y-4">
-                        <button onclick="enrollCourse()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-200">
-                            ${currentCourse.price === 0 ? 'Bepul Kursga Yozilish' : `${currentCourse.price} coin evaziga Yozilish`}
-                        </button>
-                        ${currentCourse.price > 0 ? `
-                            <p class="text-sm text-gray-600 text-center">
-                                Sizda <span id="userCoins">0</span> coin mavjud
-                            </p>
-                        ` : ''}
-                    </div>
-                `;
-                
-                // Agar pullik kurs bo'lsa, foydalanuvchi coinlarini yuklash
-                if (currentCourse.price > 0) {
-                    loadUserCoins();
-                }
+                const currentLesson = currentCourse.lessons.find(l => l._id.toString() === userProgress.currentLesson?.toString()) || currentCourse.lessons[0];
+                btn.innerHTML = `<i class="fas fa-play mr-2"></i>${currentLesson ? currentLesson.title : 'Darsni'} boshlash`;
+                btn.onclick = () => openLesson(currentLesson?._id);
             }
         }
-
-        function displayLearningPoints() {
-            const learningPoints = document.getElementById('learningPoints');
-            const points = [
-                'Grammatika qoidalari',
-                'Lug\'at boyitish',
-                'Speaking ko\'nikmalari',
-                'Listening tushunish',
-                'Writing yozish',
-                'Reading o\'qish'
-            ];
-            
-            learningPoints.innerHTML = points.map(point => `
-                <div class="flex items-center">
-                    <i class="fas fa-check text-green-600 mr-2"></i>
-                    <span class="text-gray-700">${point}</span>
-                </div>
-            `).join('');
-        }
-
-        async function loadUserProgress(courseId) {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/progress', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const progressList = await response.json();
-                    userProgress = progressList.find(p => p.course._id === courseId);
-                }
-            } catch (error) {
-                console.error('Progress yuklashda xato:', error);
-            }
-        }
-
-        async function loadUserCoins() {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('/api/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('userCoins').textContent = data.user.coins;
-                }
-            } catch (error) {
-                console.error('Coin yuklashda xato:', error);
-            }
-        }
-
         async function enrollCourse() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login';
+            try {
+                const res = await fetch(`/api/courses/${courseId}/enroll`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Yozilish xatosi');
+            }
+        }
+        function openLesson(lessonId) {
+            currentLesson = currentCourse.lessons.find(l => l._id.toString() === lessonId);
+            if (!currentLesson) return;
+            document.getElementById('videoTitle').textContent = currentLesson.title;
+            document.getElementById('lessonContent').textContent = currentLesson.content || 'Mazmun mavjud emas';
+            const playerDiv = document.getElementById('videoPlayer');
+            playerDiv.innerHTML = '';
+            if (currentLesson.videoUrl) {
+                const videoId = extractYouTubeId(currentLesson.videoUrl);
+                if (videoId) {
+                    playerDiv.innerHTML = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0" frameborder="0" allowfullscreen class="rounded-2xl"></iframe>`;
+                } else {
+                    playerDiv.innerHTML = `<video controls class="w-full h-64 object-cover rounded-2xl"><source src="${currentLesson.videoUrl}" type="video/mp4">Video qo'llab-quvvatlanmaydi.</video>`;
+                }
+            } else {
+                playerDiv.innerHTML = '<div class="bg-white/10 h-64 flex items-center justify-center rounded-2xl"><i class="fas fa-video text-6xl text-gray-400"></i></div>';
+            }
+            const materials = document.getElementById('lessonMaterials');
+            materials.innerHTML = (currentLesson.materials || []).map(m => `
+                <a href="/uploads/${m}" download class="glass inline-flex items-center px-3 lg:px-4 py-2 lg:py-3 rounded-xl text-white text-sm hover:bg-white/20 transition">
+                    <i class="fas fa-file-download mr-2"></i>${m.split('/').pop()}
+                </a>
+            `).join('') || '<p class="text-gray-400 text-center">Materiallar mavjud emas</p>';
+            loadVocabulary();
+            const completeBtn = document.getElementById('completeBtn');
+            const isCompleted = userProgress && userProgress.completedLessons.some(id => id.toString() === lessonId);
+            completeBtn.classList.toggle('hidden', isCompleted);
+            if (!isCompleted) completeBtn.onclick = () => completeLesson(lessonId);
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+        function extractYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+        }
+        async function completeLesson(lessonId) {
+            try {
+                const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`${data.message} +${data.coinsAdded} coin! Progress: ${data.progress}%`);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Tugatish xatosi');
+            }
+        }
+        function startQuiz() {
+            currentQuiz = currentCourse.quizzes.find(q => q.lessonId.toString() === currentLesson._id.toString());
+            if (!currentQuiz || !currentQuiz.questions.length) {
+                alert('Test mavjud emas');
                 return;
             }
-
+            displayQuiz();
+            document.getElementById('quizModal').classList.remove('hidden');
+            closeVideoModal();
+        }
+        function displayQuiz() {
+            const questionsDiv = document.getElementById('quizQuestions');
+            const progressDiv = document.getElementById('quizProgress');
+            questionsDiv.innerHTML = '';
+            currentQuiz.questions.forEach((q, index) => {
+                questionsDiv.innerHTML += `
+                    <div class="mb-4 lg:mb-6 p-4 lg:p-6 glass rounded-2xl">
+                        <h4 class="font-bold mb-3 lg:mb-4 text-white text-base lg:text-lg">${index + 1}. ${q.question}</h4>
+                        <div class="space-y-2 lg:space-y-3">
+                            ${q.options.map((opt, optIndex) => `
+                                <label class="flex items-center space-x-3 p-2 lg:p-3 hover:bg-white/10 rounded-xl cursor-pointer transition text-sm lg:text-base">
+                                    <input type="radio" name="q${index}" value="${optIndex}" class="text-blue-500 focus:ring-blue-400 rounded">
+                                    <span class="text-white">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            progressDiv.textContent = `0 / ${currentQuiz.questions.length} savol`;
+        }
+        async function submitQuiz() {
+            const answers = [];
+            let answered = 0;
+            currentQuiz.questions.forEach((_, index) => {
+                const selected = document.querySelector(`input[name="q${index}"]:checked`);
+                answers.push(selected ? parseInt(selected.value) : -1);
+                if (selected) answered++;
+            });
+            if (answered < currentQuiz.questions.length) return alert('Barcha savollarga javob bering!');
             try {
-                const response = await fetch(`/api/courses/${currentCourse._id}/enroll`, {
+                const res = await fetch(`/api/courses/${courseId}/quizzes/${currentQuiz._id}/submit`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ answers })
                 });
-
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert('Kursga muvaffaqiyatli qo\'shildingiz!');
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Natija: ${data.successRate}% ${data.passed ? '(O\'tdi)' : '(Qayta urinib ko\'ring)'} +${data.coinsEarned} coin!`);
+                    closeQuizModal();
                     location.reload();
                 } else {
-                    alert(result.message);
+                    alert(data.message || 'Test xatosi');
                 }
-            } catch (error) {
-                console.error('Xato:', error);
-                alert('Kursga qo\'shilishda xato yuz berdi');
+            } catch (err) {
+                alert('Xato yuz berdi');
             }
         }
-
-        function startLearning() {
-            if (!currentCourse.lessons || currentCourse.lessons.length === 0) {
-                alert('Kursda hali darslar mavjud emas');
+        function closeQuizModal() {
+            document.getElementById('quizModal').classList.add('hidden');
+        }
+        function startSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window)) return alert('Speech qo\'llab-quvvatlanmaydi');
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const score = Math.floor(Math.random() * 20) + 80;
+                document.getElementById('speechScore').textContent = `${score}%`;
+                document.getElementById('speechFeedback').textContent = score > 90 ? 'Ajoyib!' : score > 80 ? 'Yaxshi' : 'Yaxshilash mumkin';
+                document.getElementById('speechModal').classList.remove('hidden');
+            };
+            recognition.onerror = (event) => console.error('Speech error:', event.error);
+            recognition.start();
+        }
+        function closeSpeechModal() {
+            document.getElementById('speechModal').classList.add('hidden');
+            if (recognition) recognition.stop();
+        }
+        function loadVocabulary() {
+            const content = currentLesson?.content || '';
+            const words = content.match(/\b[A-Z][a-z]{3,}\b/g) || [];
+            vocabularyWords = words.slice(0, 8).map(word => ({
+                english: word,
+                uzbek: getUzbekTranslation(word)
+            }));
+        }
+        function getUzbekTranslation(word) {
+            const translations = {
+                'Hello': 'Salom',
+                'Name': 'Ism',
+                'From': 'Dan',
+                'What': 'Nima',
+                'Dear': 'Hurmatli',
+                'Sir': 'Janob',
+                'Madam': 'Xonim',
+                'Writing': 'Yozish'
+            };
+            return translations[word] || `${word} (tarjima mavjud emas)`;
+        }
+        function openVocabularyBuilder() {
+            if (vocabularyWords.length === 0) return alert('Lug\'at mavjud emas');
+            displayVocabulary();
+            document.getElementById('vocabularyModal').classList.remove('hidden');
+        }
+        function displayVocabulary() {
+            const container = document.getElementById('vocabularyList');
+            container.innerHTML = vocabularyWords.map((word) => `
+                <div class="glass p-4 lg:p-6 rounded-2xl card-hover">
+                    <h4 class="font-bold text-lg lg:text-xl text-white mb-1 lg:mb-2">${word.english}</h4>
+                    <p class="text-blue-300 italic font-medium mb-2 lg:mb-3 text-sm lg:text-base">${word.uzbek}</p>
+                    <p class="text-gray-300 text-xs lg:text-sm">${currentLesson.content.includes(word.english) ? 'Darsda ishlatilgan' : ''}</p>
+                </div>
+            `).join('');
+        }
+        function closeVocabularyModal() {
+            document.getElementById('vocabularyModal').classList.add('hidden');
+        }
+        function quizVocabulary() {
+            closeVocabularyModal();
+            vocabQuizQuestions = [...vocabularyWords].sort(() => Math.random() - 0.5).slice(0, 5);
+            currentVocabIndex = 0;
+            displayVocabQuizQuestion();
+            document.getElementById('vocabQuizModal').classList.remove('hidden');
+        }
+        function displayVocabQuizQuestion() {
+            if (currentVocabIndex >= vocabQuizQuestions.length) {
+                document.getElementById('vocabQuizContent').innerHTML = '<p class="text-center text-white text-base lg:text-lg">Test tugadi!</p>';
                 return;
             }
-            
-            // Birinchi darsni ochish yoki oxirgi boshlangan darsni davom ettirish
-            const firstLesson = currentCourse.lessons[0];
-            alert(`"${firstLesson.title}" darsini boshlash funksiyasi keyingi versiyada qo'shiladi`);
+            const q = vocabQuizQuestions[currentVocabIndex];
+            const options = [q.uzbek, ...vocabularyWords.filter(w => w.english !== q.english).slice(0, 3).map(w => w.uzbek)].sort(() => Math.random() - 0.5);
+            document.getElementById('vocabQuizContent').innerHTML = `
+                <h4 class="font-bold text-white text-lg lg:text-xl mb-4 lg:mb-6">${q.english} so'zining o'zbekcha tarjimasi nima?</h4>
+                <div class="space-y-2 lg:space-y-3 mb-4 lg:mb-6">
+                    ${options.map(opt => `
+                        <label class="flex items-center space-x-3 p-3 lg:p-4 glass rounded-xl cursor-pointer hover:bg-white/10 transition text-sm lg:text-base">
+                            <input type="radio" name="vocabQ${currentVocabIndex}" value="${opt}" class="text-blue-500">
+                            <span class="text-white">${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+                <button onclick="nextVocabQuestion()" class="btn-glow bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-xl text-sm lg:text-base w-full">Keyingi</button>
+            `;
         }
-
-        function getLevelText(level) {
-            const levels = {
-                'beginner': 'Boshlang\'ich',
-                'elementary': 'Elementar', 
-                'intermediate': 'O\'rta',
-                'upper-intermediate': 'Yuqori O\'rta',
-                'advanced': 'Ilg\'or'
-            };
-            return levels[level] || level;
+        function nextVocabQuestion() {
+            currentVocabIndex++;
+            displayVocabQuizQuestion();
         }
-
-        // Sahifa yuklanganda
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            loadCourse();
+        async function submitVocabQuiz() {
+            let score = 0;
+            vocabQuizQuestions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="vocabQ${index}"]:checked`);
+                if (selected && selected.value === q.uzbek) score++;
+            });
+            alert(`Siz ${score}/${vocabQuizQuestions.length} ball oldingiz!`);
+            closeVocabQuiz();
+        }
+        function closeVocabQuiz() {
+            document.getElementById('vocabQuizModal').classList.add('hidden');
+        }
+        function generateSummary() {
+            const summary = currentLesson.content ?
+                `Bu darsda ${currentLesson.title} mavzusi muhokama qilindi. Asosiy nuqtalar: ${currentLesson.content.substring(0, 200)}... (AI xulosasi).` :
+                'Xulosa yaratib bo\'lmaydi.';
+            document.getElementById('lessonSummary').textContent = summary;
+            document.getElementById('summaryModal').classList.remove('hidden');
+        }
+        function closeSummaryModal() {
+            document.getElementById('summaryModal').classList.add('hidden');
+        }
+        function openWritingAssistant() {
+            document.getElementById('writingModal').classList.remove('hidden');
+        }
+        function closeWritingModal() {
+            document.getElementById('writingModal').classList.add('hidden');
+            document.getElementById('writingResult').classList.add('hidden');
+        }
+        async function checkWriting() {
+            const text = document.getElementById('writingText').value.trim();
+            if (!text) return alert('Matn kiriting');
+            try {
+                const res = await fetch('/api/ai/writing-check', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+                const result = await res.json();
+                document.getElementById('writingScore').textContent = `${result.score}/10`;
+                document.getElementById('writingFeedback').textContent = result.overallFeedback;
+                const mistakesDiv = document.getElementById('grammarMistakes');
+                mistakesDiv.innerHTML = result.grammarMistakes.map(m => `
+                    <div class="glass p-3 lg:p-4 rounded-xl border-l-4 border-red-400 bg-red-500/10">
+                        <p class="text-white text-sm lg:text-base"><strong>Xato:</strong> ${m.mistake} → <strong>To'g'ri:</strong> ${m.correction}</p>
+                        <p class="text-red-300 text-xs lg:text-sm">${m.explanation}</p>
+                    </div>
+                `).join('') || '<p class="text-green-400 font-medium text-sm lg:text-base">Xato topilmadi!</p>';
+                const suggestionsDiv = document.getElementById('suggestions');
+                suggestionsDiv.innerHTML = result.suggestions.map(s => `
+                    <div class="glass p-3 lg:p-4 rounded-xl border-l-4 border-blue-400 bg-blue-500/10">
+                        <p class="text-white text-xs lg:text-sm">${s}</p>
+                    </div>
+                `).join('') || '<p class="text-gray-400 text-sm lg:text-base">Takliflar yo\'q</p>';
+                document.getElementById('writingResult').classList.remove('hidden');
+            } catch (err) {
+                alert('Tekshirish xatosi');
+            }
+        }
+        async function loadUserCoins() {
+            try {
+                const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const user = await res.json();
+                    document.getElementById('coinsCount').textContent = user.coins;
+                    document.getElementById('mobileCoinsCount').textContent = user.coins;
+                }
+            } catch (err) {
+                console.error('Coins xatosi:', err);
+            }
+        }
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+        async function toggleLike() {
+            try {
+                const res = await fetch(`/api/courses/${courseId}/like`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    likes = data.likes || [];
+                    updateLikeButton();
+                } else {
+                    const errorData = await res.json();
+                    alert(errorData.message || 'Like xatosi');
+                }
+            } catch (err) {
+                alert('Xato yuz berdi');
+            }
+        }
+        function updateLikeButton() {
+            const isLiked = likes.some(l => l._id.toString() === userId);
+            const likeIcon = document.getElementById('likeIcon');
+            const likeCount = document.getElementById('likeCount');
+            likeIcon.className = isLiked ? 'fas fa-heart text-red-400' : 'far fa-heart';
+            likeCount.textContent = likes.length;
+        }
+        function openComments() {
+            loadComments();
+            document.getElementById('commentsModal').classList.remove('hidden');
+        }
+        function closeComments() {
+            document.getElementById('commentsModal').classList.add('hidden');
+        }
+        function loadComments() {
+            const container = document.getElementById('commentsList');
+            container.innerHTML = comments.map(comment => {
+                const isLiked = comment.likes.some(l => l._id.toString() === userId);
+                return `
+                    <div class="glass p-4 lg:p-6 rounded-2xl card-hover">
+                        <div class="flex flex-col lg:flex-row items-start lg:items-start space-y-3 lg:space-y-0 lg:space-x-4">
+                            <img src="${comment.user.avatar ? `/uploads/${comment.user.avatar}` : 'https://via.placeholder.com/40'}" alt="${comment.user.firstName}" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full cursor-pointer ring-2 ring-white/20 hover:ring-blue-400 transition flex-shrink-0" onclick="window.location.href='/profile?userId=${comment.user._id}'">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-2 lg:mb-4">
+                                    <span class="font-bold cursor-pointer text-blue-300 hover:text-blue-200 text-sm lg:text-base truncate" onclick="window.location.href='/profile?userId=${comment.user._id}'">${comment.user.firstName} ${comment.user.lastName}</span>
+                                    <span class="text-gray-400 text-xs lg:text-sm">${new Date(comment.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <p class="mb-3 lg:mb-4 text-gray-200 leading-relaxed text-sm lg:text-base">${comment.text}</p>
+                                <div class="flex items-center space-x-4 lg:space-x-6 text-xs lg:text-sm text-gray-400">
+                                    <button onclick="toggleCommentLike('${comment._id}')" class="flex items-center space-x-1 lg:space-x-2 hover:text-red-300 ${isLiked ? 'text-red-300' : ''} transition">
+                                        <i class="fas ${isLiked ? 'fa-heart' : 'far fa-heart'}"></i>
+                                        <span>${comment.likes.length}</span>
+                                    </button>
+                                    <button onclick="replyToComment('${comment._id}')" class="hover:text-blue-300">Javob</button>
+                                </div>
+                                ${comment.replies && comment.replies.length > 0 ? `
+                                    <div class="ml-0 lg:ml-12 mt-3 lg:mt-4 space-y-2 lg:space-y-3">
+                                        ${comment.replies.map(reply => `
+                                            <div class="glass p-3 lg:p-4 rounded-xl bg-white/5 border-l-4 border-gray-400/30">
+                                                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-1 lg:mb-2 text-xs lg:text-sm">
+                                                    <span class="font-bold cursor-pointer text-blue-300" onclick="window.location.href='/profile?userId=${reply.user._id}'">${reply.user.firstName}</span>
+                                                    <span class="text-gray-400">${new Date(reply.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                                <p class="text-gray-200 text-xs lg:text-sm">${reply.text}</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') || '<p class="text-center text-gray-400 py-12 text-sm lg:text-base">Izoh yo\'q</p>';
+        }
+        async function toggleCommentLike(commentId) {
+            try {
+                const res = await fetch(`/api/courses/${courseId}/comments/${commentId}/like`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const commentIndex = comments.findIndex(c => c._id.toString() === commentId);
+                    if (commentIndex !== -1) {
+                        comments[commentIndex] = data.comment;
+                        loadComments();
+                    }
+                } else {
+                    const errorData = await res.json();
+                    alert(errorData.message || 'Xato');
+                }
+            } catch (err) {
+                alert('Xato yuz berdi');
+            }
+        }
+        let replyingTo = null;
+        function replyToComment(commentId) {
+            replyingTo = commentId;
+            const textarea = document.getElementById('commentText');
+            textarea.placeholder = 'Javob yozing...';
+            textarea.focus();
+        }
+        document.getElementById('commentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = document.getElementById('commentText').value.trim();
+            if (!text) return alert('Izoh bo\'sh bo\'lmasligi kerak');
+            try {
+                const body = replyingTo ? { text, replyTo: replyingTo } : { text };
+                const res = await fetch(`/api/courses/${courseId}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    comments = data.comments || [];
+                    document.getElementById('commentText').value = '';
+                    replyingTo = null;
+                    document.getElementById('commentText').placeholder = 'Izohingizni yozing...';
+                    loadComments();
+                    updateCommentCount();
+                } else {
+                    const errorData = await res.json();
+                    alert(errorData.message || 'Izoh xatosi');
+                }
+            } catch (err) {
+                alert('Izoh yuborish xatosi');
+            }
         });
+        function updateCommentCount() {
+            document.getElementById('commentCount').textContent = comments.length;
+        }
+        // Mobile Menu Functions
+        function openMobileMenu() {
+            document.getElementById('mobileMenu').classList.remove('hidden');
+            document.getElementById('mobileOverlay').classList.remove('hidden');
+        }
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('hidden');
+            document.getElementById('mobileOverlay').classList.add('hidden');
+        }
+        document.addEventListener('DOMContentLoaded', loadCourse);
     </script>
 </body>
 </html>

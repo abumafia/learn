@@ -1,97 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>O'qituvchi Paneli - EnglishMaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); }
+        .btn-glow { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); transform: scale(1.05); }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.6s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen text-white">
     <!-- Navigation -->
-    <nav class="bg-green-600 text-white shadow-lg">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="/" class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-graduation-cap mr-2"></i>
-                    EnglishMaster
-                </a>
-                <div class="flex items-center space-x-6">
-                    <a href="/courses" class="hover:text-green-200 transition">Kurslar</a>
-                    <a href="/profile" class="hover:text-green-200 transition">Profil</a>
-                    <a href="/teacher" class="font-semibold">O'qituvchi</a>
-                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
-                        Chiqish
-                    </button>
-                </div>
+    <nav class="glass fixed top-0 w-full z-50 py-4 px-6 shadow-2xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold flex items-center glass px-4 py-2 rounded-xl">
+                <i class="fas fa-graduation-cap mr-2"></i> EnglishMaster
+            </a>
+            <div class="flex items-center space-x-6">
+                <a href="/courses" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">Kurslar</a>
+                <a href="/profile" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">Profil</a>
+                <a href="/teacher" class="glass px-4 py-2 rounded-xl font-semibold bg-white/10">O'qituvchi</a>
+                <button onclick="openWritingAssistant()" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">
+                    <i class="fas fa-robot mr-2"></i> AI Yordamchi
+                </button>
+                <span id="userCoins" class="glass px-4 py-2 rounded-xl font-semibold flex items-center">
+                    <i class="fas fa-coins mr-2 text-yellow-300"></i>
+                    <span id="coinsCount">0</span> coin
+                </span>
+                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-6 py-2 rounded-xl transition text-white font-semibold">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Chiqish
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
+    <div class="pt-20 container mx-auto px-4 py-8">
+        <!-- Loading -->
+        <div id="loading" class="text-center py-12 fade-in hidden">
+            <div class="loading mx-auto mb-4"></div>
+            <p class="text-gray-300">Ma'lumotlar yuklanmoqda...</p>
+        </div>
+
         <!-- Statistikalar -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glass rounded-2xl p-6 card-hover fade-in">
                 <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 rounded-lg">
-                        <i class="fas fa-book text-blue-600 text-2xl"></i>
+                    <div class="p-3 bg-gradient-to-r from-blue-400 to-blue-600 rounded-xl">
+                        <i class="fas fa-book-open text-white text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Jami Kurslar</p>
-                        <h3 id="totalCourses" class="text-2xl font-bold">0</h3>
+                        <p class="text-gray-300 text-sm">Jami Kurslar</p>
+                        <h3 id="totalCourses" class="text-3xl font-bold text-white">0</h3>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="glass rounded-2xl p-6 card-hover fade-in" style="animation-delay: 0.1s;">
                 <div class="flex items-center">
-                    <div class="p-3 bg-green-100 rounded-lg">
-                        <i class="fas fa-users text-green-600 text-2xl"></i>
+                    <div class="p-3 bg-gradient-to-r from-green-400 to-green-600 rounded-xl">
+                        <i class="fas fa-users text-white text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">O'quvchilar</p>
-                        <h3 id="totalStudents" class="text-2xl font-bold">0</h3>
+                        <p class="text-gray-300 text-sm">O'quvchilar</p>
+                        <h3 id="totalStudents" class="text-3xl font-bold text-white">0</h3>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="glass rounded-2xl p-6 card-hover fade-in" style="animation-delay: 0.2s;">
                 <div class="flex items-center">
-                    <div class="p-3 bg-purple-100 rounded-lg">
-                        <i class="fas fa-coins text-purple-600 text-2xl"></i>
+                    <div class="p-3 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-xl">
+                        <i class="fas fa-coins text-white text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Daromad</p>
-                        <h3 id="totalEarnings" class="text-2xl font-bold">0 coin</h3>
+                        <p class="text-gray-300 text-sm">Daromad</p>
+                        <h3 id="totalEarnings" class="text-3xl font-bold text-white">0 coin</h3>
                     </div>
                 </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="glass rounded-2xl p-6 card-hover fade-in" style="animation-delay: 0.3s;">
                 <div class="flex items-center">
-                    <div class="p-3 bg-yellow-100 rounded-lg">
-                        <i class="fas fa-star text-yellow-600 text-2xl"></i>
+                    <div class="p-3 bg-gradient-to-r from-purple-400 to-purple-600 rounded-xl">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm text-gray-600">Reyting</p>
-                        <h3 class="text-2xl font-bold">4.8/5</h3>
+                        <p class="text-gray-300 text-sm">Reyting</p>
+                        <h3 id="teacherRating" class="text-3xl font-bold text-white">4.8/5</h3>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Yangi kurs qo'shish -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Yangi Kurs Yaratish</h2>
+        <!-- Yangi kurs yaratish -->
+        <div class="glass rounded-2xl p-6 mb-6 slide-up">
+            <h2 class="text-2xl font-bold mb-6 text-white">Yangi Kurs Yaratish</h2>
             <form id="createCourseForm" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-gray-700 mb-2">Kurs Nomi</label>
-                        <input type="text" id="courseTitle" 
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                               required>
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Kurs Nomi</label>
+                        <input type="text" id="courseTitle" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
                     </div>
                     <div>
-                        <label class="block text-gray-700 mb-2">Daraja</label>
-                        <select id="courseLevel" 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                        <label class="block text-gray-300 text-sm font-medium mb-2">Daraja</label>
+                        <select id="courseLevel" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
                             <option value="beginner">Boshlang'ich</option>
                             <option value="elementary">Elementar</option>
                             <option value="intermediate">O'rta</option>
@@ -100,62 +121,46 @@
                         </select>
                     </div>
                 </div>
-
                 <div>
-                    <label class="block text-gray-700 mb-2">Kategoriya</label>
-                    <select id="courseCategory" 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                        <option value="grammar">Grammatika</option>
-                        <option value="vocabulary">Lug'at</option>
-                        <option value="speaking">Speaking</option>
-                        <option value="listening">Listening</option>
-                        <option value="writing">Writing</option>
-                        <option value="reading">Reading</option>
-                        <option value="business">Business English</option>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Kategoriya</label>
+                    <select id="courseCategory" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="general">Umumiy Ingliz</option>
+                        <option value="business">Biznes Ingliz</option>
+                        <option value="academic">Akademik Ingliz</option>
+                        <option value="conversation">Speaking & Conversation</option>
+                        <option value="exam">IELTS/TOEFL Tayyorlash</option>
                     </select>
                 </div>
-
                 <div>
-                    <label class="block text-gray-700 mb-2">Kurs Tavsifi</label>
-                    <textarea id="courseDescription" rows="3"
-                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                              required></textarea>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Kurs Tavsifi</label>
+                    <textarea id="courseDescription" rows="3" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Narx (coin)</label>
+                    <input type="number" id="coursePrice" min="0" value="0" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <p class="text-gray-400 text-sm mt-1">0 = Bepul kurs</p>
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Kurs Rasmi</label>
+                    <input type="file" id="courseImage" accept="image/*" class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
                 </div>
 
-                <div>
-                    <label class="block text-gray-700 mb-2">Narx (coin)</label>
-                    <input type="number" id="coursePrice" min="0" value="0"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                    <p class="text-sm text-gray-500 mt-1">0 - bepul kurs</p>
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 mb-2">Kurs Rasmi</label>
-                    <input type="file" id="courseImage" accept="image/*"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                </div>
-
-                <!-- Darslar qismi -->
+                <!-- Darslar Bo'limi -->
                 <div>
                     <div class="flex justify-between items-center mb-4">
-                        <label class="block text-gray-700 text-lg font-semibold">Darslar</label>
-                        <button type="button" onclick="addLesson()" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                            <i class="fas fa-plus mr-2"></i> Yangi Dars
+                        <label class="text-white text-lg font-bold">Darslar</label>
+                        <button type="button" onclick="addLesson()" class="btn-glow bg-green-600 hover:bg-green-700 px-4 py-2 rounded-xl text-white">
+                            <i class="fas fa-plus mr-2"></i> Yangi Dars Qo'shish
                         </button>
                     </div>
                     <div id="lessonsContainer" class="space-y-4">
-                        <!-- Darslar shu yerda yaratiladi -->
+                        <!-- Darslar dinamik qo'shiladi -->
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="resetForm()" 
-                            class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
-                        Bekor Qilish
-                    </button>
-                    <button type="submit" 
-                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
+                <div class="flex justify-end space-x-4 pt-4 border-t border-white/20">
+                    <button type="button" onclick="resetForm()" class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl transition">Bekor Qilish</button>
+                    <button type="submit" class="btn-glow bg-blue-600 hover:bg-blue-700 px-6 py-3 text-white rounded-xl font-semibold">
                         <i class="fas fa-save mr-2"></i> Kursni Saqlash
                     </button>
                 </div>
@@ -163,51 +168,91 @@
         </div>
 
         <!-- Mavjud Kurslar -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-2xl font-bold mb-6 text-gray-800">Mening Kurslarim</h2>
-            <div id="myCoursesList" class="space-y-4">
-                <!-- Kurslar JavaScript orqali yuklanadi -->
+        <div class="glass rounded-2xl p-6 slide-up">
+            <h2 class="text-2xl font-bold mb-6 text-white">Mening Kurslarim</h2>
+            <div id="myCoursesList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Kurslar yuklanadi -->
+            </div>
+        </div>
+
+        <!-- Student Progress Modal (Yangi) -->
+        <div id="studentProgressModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-4">
+            <div class="glass rounded-2xl w-full max-w-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">O'quvchi Progressi</h3>
+                    <button onclick="closeStudentProgressModal()" class="text-gray-300 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="studentProgressContent" class="text-white">
+                    <!-- Progress ma'lumotlari yuklanadi -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Writing Assistant Modal (Yangi) -->
+        <div id="writingAssistantModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-4">
+            <div class="glass rounded-2xl w-full max-w-2xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">AI Writing Assistant</h3>
+                    <button onclick="closeWritingAssistantModal()" class="text-gray-300 hover:text-white text-2xl">&times;</button>
+                </div>
+                <textarea id="writingText" rows="6" placeholder="Matn yozing va AI tekshirsin..." class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+                <button onclick="checkWriting()" class="mt-4 w-full btn-glow bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl">Tekshirish</button>
+                <div id="writingResult" class="mt-4 hidden text-white">
+                    <!-- Natijalar -->
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Auth tekshirish
         const token = localStorage.getItem('token');
         if (!token) {
+            alert('Iltimos, kirish qiling!');
             window.location.href = '/login';
         }
 
         let myCourses = [];
         let lessonCount = 0;
+        let editingCourseId = null;
+
+        // Loading ko'rsatish
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
 
         // O'qituvchi kurslarini yuklash
         async function loadMyCourses() {
+            showLoading();
             try {
                 const response = await fetch('/api/teacher/courses', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
                 if (response.ok) {
                     myCourses = await response.json();
                     displayMyCourses();
                     updateStats();
+                } else {
+                    alert('Kurslarni yuklashda xato');
                 }
             } catch (error) {
                 console.error('Kurslarni yuklashda xato:', error);
+                alert('Kurslarni yuklashda xato yuz berdi');
+            } finally {
+                hideLoading();
             }
         }
 
         function displayMyCourses() {
             const coursesList = document.getElementById('myCoursesList');
-            
             if (myCourses.length === 0) {
                 coursesList.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-book-open text-4xl mb-4"></i>
-                        <p>Hali hech qanday kurs yaratilmagan</p>
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-book-open text-6xl text-gray-400 mb-4"></i>
+                        <h3 class="text-xl font-bold text-gray-300 mb-2">Hali kurs yaratilmagan</h3>
+                        <p class="text-gray-400">Birinchi kursingizni yaratish uchun yuqoridagi formani to'ldiring</p>
                     </div>
                 `;
                 return;
@@ -216,63 +261,43 @@
             coursesList.innerHTML = myCourses.map(course => {
                 const totalStudents = course.students?.length || 0;
                 const totalEarnings = course.price * totalStudents;
-                
+                const avgRating = 4.8; // Simulyatsiya
+
                 return `
-                    <div class="border border-gray-200 rounded-lg p-6 hover:bg-gray-50 transition duration-200">
-                        <div class="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                            <div class="flex items-start space-x-4 mb-4 md:mb-0">
-                                <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    ${course.image ? 
-                                        `<img src="/uploads/${course.image}" alt="${course.title}" class="w-16 h-16 object-cover rounded-lg">` :
-                                        `<i class="fas fa-book text-blue-600 text-xl"></i>`
-                                    }
+                    <div class="glass rounded-2xl p-6 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    ${course.image ? `<img src="/uploads/${course.image}" alt="${course.title}" class="w-12 h-12 object-cover rounded-xl">` : `<i class="fas fa-book-open text-white text-xl"></i>`}
                                 </div>
                                 <div>
-                                    <h3 class="text-xl font-bold text-gray-800">${course.title}</h3>
-                                    <p class="text-gray-600 mt-1">${course.description}</p>
-                                    <div class="flex items-center space-x-4 mt-2">
-                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                                            ${getLevelText(course.level)}
-                                        </span>
-                                        <span class="text-gray-600 text-sm">
-                                            ${course.lessons?.length || 0} dars
-                                        </span>
-                                        <span class="text-lg font-bold ${course.price === 0 ? 'text-green-600' : 'text-orange-600'}">
-                                            ${course.price === 0 ? 'Bepul' : course.price + ' coin'}
-                                        </span>
+                                    <h3 class="text-lg font-bold text-white">${course.title}</h3>
+                                    <p class="text-gray-300 text-sm">${course.description || 'Rasm mavjud emas'}</p>
+                                    <div class="flex items-center space-x-2 mt-1">
+                                        <span class="text-xs bg-white/10 px-2 py-1 rounded-full text-blue-300">${getLevelText(course.level)}</span>
+                                        <span class="text-xs text-gray-400">${course.lessons.length} dars</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-800">${totalStudents}</div>
-                                <div class="text-sm text-gray-600">O'quvchilar</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-800">${totalEarnings}</div>
-                                <div class="text-sm text-gray-600">Daromad</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-800">${Math.floor(Math.random() * 5) + 4}.${Math.floor(Math.random() * 9)}</div>
-                                <div class="text-sm text-gray-600">Reyting</div>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-gray-800">${course.isActive ? 'Faol' : 'Nofaol'}</div>
-                                <div class="text-sm text-gray-600">Holat</div>
+                            <div class="text-right">
+                                <div class="text-yellow-300 text-sm">${avgRating}/5</div>
+                                <div class="text-gray-400 text-xs">${totalStudents} o'quvchi</div>
+                                <div class="text-green-400 font-bold text-sm">${totalEarnings} coin</div>
                             </div>
                         </div>
-                        
                         <div class="flex justify-end space-x-2">
-                            <button onclick="editCourse('${course._id}')" 
-                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                                <i class="fas fa-edit mr-2"></i>Tahrirlash
+                            <button onclick="viewCourse('${course._id}')" class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-eye mr-1"></i> Ko'rish
                             </button>
-                            <a href="/course/${course._id}" 
-                               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg inline-flex items-center">
-                                <i class="fas fa-eye mr-2"></i>Ko'rish
-                            </a>
+                            <button onclick="editCourse('${course._id}')" class="text-yellow-400 hover:text-yellow-300">
+                                <i class="fas fa-edit mr-1"></i> Tahrirlash
+                            </button>
+                            <button onclick="deleteCourse('${course._id}')" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash mr-1"></i> O'chirish
+                            </button>
+                            <button onclick="viewStudentProgress('${course._id}')" class="text-purple-400 hover:text-purple-300">
+                                <i class="fas fa-chart-bar mr-1"></i> Progress
+                            </button>
                         </div>
                     </div>
                 `;
@@ -283,172 +308,304 @@
             const totalCourses = myCourses.length;
             const totalStudents = myCourses.reduce((sum, course) => sum + (course.students?.length || 0), 0);
             const totalEarnings = myCourses.reduce((sum, course) => sum + (course.price * (course.students?.length || 0)), 0);
-            
+            const avgRating = 4.8; // Simulyatsiya
+
             document.getElementById('totalCourses').textContent = totalCourses;
             document.getElementById('totalStudents').textContent = totalStudents;
             document.getElementById('totalEarnings').textContent = totalEarnings + ' coin';
+            document.getElementById('teacherRating').textContent = avgRating + '/5';
         }
 
         // Dars qo'shish
         function addLesson() {
             const lessonsContainer = document.getElementById('lessonsContainer');
             const lessonId = lessonCount++;
-            
             const lessonHtml = `
-                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50" data-lesson-id="${lessonId}">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-lg">Dars ${lessonId + 1}</h4>
-                        <button type="button" onclick="removeLesson(${lessonId})" 
-                                class="text-red-600 hover:text-red-800">
-                            <i class="fas fa-trash"></i>
+                <div class="glass rounded-xl p-4 space-y-4" data-lesson-id="${lessonId}">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-white font-bold">Dars ${lessonId + 1}</h4>
+                        <button type="button" onclick="removeLesson(${lessonId})" class="text-red-400 hover:text-red-300">
+                            <i class="fas fa-trash text-xl"></i>
                         </button>
                     </div>
-                    
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         <div>
-                            <label class="block text-gray-700 mb-2">Dars Nomi</label>
-                            <input type="text" name="lessonTitle" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                   placeholder="Dars nomi"
-                                   required>
+                            <label class="text-gray-300 text-sm font-medium">Dars Nomi</label>
+                            <input type="text" name="lessonTitle" required class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Dars nomi kiriting">
                         </div>
-                        
                         <div>
-                            <label class="block text-gray-700 mb-2">Video URL</label>
-                            <input type="url" name="lessonVideoUrl" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                   placeholder="https://www.youtube.com/watch?v=...">
+                            <label class="text-gray-300 text-sm font-medium">Video URL (YouTube)</label>
+                            <input type="url" name="lessonVideoUrl" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="https://www.youtube.com/watch?v=...">
                         </div>
-                        
                         <div>
-                            <label class="block text-gray-700 mb-2">Dars Kontenti</label>
-                            <textarea name="lessonContent" rows="4"
-                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                      placeholder="Dars matni yoki tavsifi..."></textarea>
+                            <label class="text-gray-300 text-sm font-medium">Dars Kontenti</label>
+                            <textarea name="lessonContent" rows="3" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Dars mazmuni yoki izoh..."></textarea>
                         </div>
-                        
                         <div>
-                            <label class="block text-gray-700 mb-2">Davomiylik (minut)</label>
-                            <input type="number" name="lessonDuration" min="1" value="30"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                            <label class="text-gray-300 text-sm font-medium">Davomiylik (daqiqa)</label>
+                            <input type="number" name="lessonDuration" min="1" value="30" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <div>
+                            <label class="text-gray-300 text-sm font-medium">Materiallar (PDF/Word fayllar)</label>
+                            <input type="file" name="lessonMaterials" multiple accept=".pdf,.doc,.docx" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                    </div>
+
+                    <!-- Test/Quiz Bo'limi (Yangi) -->
+                    <div>
+                        <label class="text-white font-bold mb-2">Dars Testi (Quiz)</label>
+                        <div class="bg-white/5 rounded-lg p-3">
+                            <button type="button" onclick="addQuizQuestion(${lessonId})" class="text-sm text-blue-400 hover:text-blue-300 mb-2">
+                                <i class="fas fa-plus mr-1"></i> Savol Qo'shish
+                            </button>
+                            <div id="quizContainer_${lessonId}" class="space-y-3">
+                                <!-- Savollar dinamik qo'shiladi -->
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            lessonsContainer.innerHTML += lessonHtml;
+            lessonsContainer.insertAdjacentHTML('beforeend', lessonHTML);
         }
 
-        // Darsni o'chirish
+        // Savol qo'shish
+        function addQuizQuestion(lessonId) {
+            const quizContainer = document.getElementById(`quizContainer_${lessonId}`);
+            const questionId = Date.now(); // Unique ID
+            const questionHtml = `
+                <div class="bg-white/10 rounded-lg p-3 space-y-2" data-question-id="${questionId}">
+                    <div class="flex justify-between items-center">
+                        <label class="text-white text-sm">Savol</label>
+                        <button type="button" onclick="removeQuizQuestion(${lessonId}, ${questionId})" class="text-red-400">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <input type="text" name="questionText" required class="w-full px-3 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" placeholder="Savol matni...">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+                        <input type="text" name="option1" required class="px-2 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none" placeholder="Variant A">
+                        <input type="text" name="option2" required class="px-2 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none" placeholder="Variant B">
+                        <input type="text" name="option3" class="px-2 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none" placeholder="Variant C">
+                        <input type="text" name="option4" class="px-2 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none" placeholder="Variant D">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-gray-300 text-sm">To'g'ri Javob:</label>
+                        <select name="correctAnswer" class="px-2 py-1 bg-white/5 border border-white/30 rounded text-white text-sm focus:outline-none">
+                            <option value="0">A</option>
+                            <option value="1">B</option>
+                            <option value="2">C</option>
+                            <option value="3">D</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            quizContainer.insertAdjacentHTML('beforeend', questionHtml);
+        }
+
         function removeLesson(lessonId) {
             const lessonElement = document.querySelector(`[data-lesson-id="${lessonId}"]`);
-            if (lessonElement) {
-                lessonElement.remove();
-            }
+            if (lessonElement) lessonElement.remove();
         }
 
-        // Formani tozalash
+        function removeQuizQuestion(lessonId, questionId) {
+            const questionElement = document.querySelector(`[data-question-id="${questionId}"]`);
+            if (questionElement) questionElement.remove();
+        }
+
         function resetForm() {
             document.getElementById('createCourseForm').reset();
             document.getElementById('lessonsContainer').innerHTML = '';
             lessonCount = 0;
+            editingCourseId = null;
+            document.querySelector('#createCourseForm h2').textContent = 'Yangi Kurs Yaratish';
         }
 
-        // Kurs yaratish
+        // Kurs yaratish/tahrirlash
         document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Darslarni yig'ish
+            showLoading();
+
             const lessons = [];
             const lessonElements = document.querySelectorAll('[data-lesson-id]');
-            
             lessonElements.forEach(lessonElement => {
-                const title = lessonElement.querySelector('[name="lessonTitle"]').value;
-                const videoUrl = lessonElement.querySelector('[name="lessonVideoUrl"]').value;
-                const content = lessonElement.querySelector('[name="lessonContent"]').value;
-                const duration = parseInt(lessonElement.querySelector('[name="lessonDuration"]').value) || 30;
-                
-                lessons.push({
-                    title: title,
-                    videoUrl: videoUrl,
-                    content: content,
-                    duration: duration
+                const lessonData = {
+                    title: lessonElement.querySelector('[name="lessonTitle"]').value,
+                    videoUrl: lessonElement.querySelector('[name="lessonVideoUrl"]').value,
+                    content: lessonElement.querySelector('[name="lessonContent"]').value,
+                    duration: parseInt(lessonElement.querySelector('[name="lessonDuration"]').value) || 30,
+                    materials: Array.from(lessonElement.querySelector('[name="lessonMaterials"]').files).map(f => f.name)
+                };
+
+                // Quiz savollari
+                const quizQuestions = [];
+                const questionElements = lessonElement.querySelectorAll('[data-question-id]');
+                questionElements.forEach(qEl => {
+                    quizQuestions.push({
+                        question: qEl.querySelector('[name="questionText"]').value,
+                        options: [
+                            qEl.querySelector('[name="option1"]').value,
+                            qEl.querySelector('[name="option2"]').value,
+                            qEl.querySelector('[name="option3"]').value || '',
+                            qEl.querySelector('[name="option4"]').value || ''
+                        ],
+                        correctAnswer: parseInt(qEl.querySelector('[name="correctAnswer"]').value)
+                    });
                 });
+                lessonData.quiz = { questions: quizQuestions };
+
+                lessons.push(lessonData);
             });
 
-            const courseData = {
-                title: document.getElementById('courseTitle').value,
-                description: document.getElementById('courseDescription').value,
-                level: document.getElementById('courseLevel').value,
-                category: document.getElementById('courseCategory').value,
-                price: parseInt(document.getElementById('coursePrice').value),
-                lessons: lessons
-            };
+            const formData = new FormData();
+            formData.append('title', document.getElementById('courseTitle').value);
+            formData.append('description', document.getElementById('courseDescription').value);
+            formData.append('level', document.getElementById('courseLevel').value);
+            formData.append('category', document.getElementById('courseCategory').value);
+            formData.append('price', document.getElementById('coursePrice').value);
+            formData.append('lessons', JSON.stringify(lessons));
+
+            const imageFile = document.getElementById('courseImage').files[0];
+            if (imageFile) formData.append('image', imageFile);
 
             try {
-                const formData = new FormData();
-                formData.append('title', courseData.title);
-                formData.append('description', courseData.description);
-                formData.append('level', courseData.level);
-                formData.append('category', courseData.category);
-                formData.append('price', courseData.price);
-                formData.append('lessons', JSON.stringify(courseData.lessons));
-
-                // Rasm faylini qo'shish
-                const imageFile = document.getElementById('courseImage').files[0];
-                if (imageFile) {
-                    formData.append('image', imageFile);
-                }
-
-                const response = await fetch('/api/courses', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
+                const url = editingCourseId ? `/api/courses/${editingCourseId}` : '/api/courses';
+                const method = editingCourseId ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
 
                 const result = await response.json();
-                
                 if (response.ok) {
-                    alert('Kurs muvaffaqiyatli yaratildi!');
+                    alert(editingCourseId ? 'Kurs yangilandi!' : 'Kurs yaratildi!');
                     resetForm();
                     loadMyCourses();
                 } else {
-                    alert(result.message);
+                    alert(result.message || 'Xato yuz berdi');
                 }
             } catch (error) {
-                console.error('Xato:', error);
-                alert('Kurs yaratishda xato yuz berdi');
+                console.error('Kurs saqlashda xato:', error);
+                alert('Kurs saqlashda xato yuz berdi');
+            } finally {
+                hideLoading();
             }
         });
 
+        // Kurs ko'rish
+        function viewCourse(courseId) {
+            window.open(`/course/${courseId}`, '_blank');
+        }
+
+        // Kurs tahrirlash
         function editCourse(courseId) {
-            alert(`"${courseId}" kursini tahrirlash funksiyasi keyingi versiyada qo'shiladi`);
+            editingCourseId = courseId;
+            document.querySelector('#createCourseForm h2').textContent = 'Kursni Tahrirlash';
+            // Yuklash logikasi qo'shilishi mumkin
+            addLesson(); // Misol uchun
+        }
+
+        // Kurs o'chirish
+        function deleteCourse(courseId) {
+            if (confirm('Kursni o\'chirishni xohlaysizmi?')) {
+                fetch(`/api/courses/${courseId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }).then(res => {
+                    if (res.ok) {
+                        alert('Kurs o\'chirildi');
+                        loadMyCourses();
+                    } else {
+                        alert('O\'chirishda xato');
+                    }
+                }).catch(err => alert('Xato: ' + err));
+            }
+        }
+
+        // O'quvchi Progressi Ko'rish
+        function viewStudentProgress(courseId) {
+            fetch(`/api/courses/${courseId}/participants`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            }).then(res => res.json()).then(data => {
+                document.getElementById('studentProgressContent').innerHTML = data.participants.map(student => `
+                    <div class="glass p-3 rounded-lg mb-2">
+                        <div class="flex justify-between">
+                            <span class="text-white">${student.firstName} ${student.lastName}</span>
+                            <span class="text-green-400">${student.progress}%</span>
+                        </div>
+                        <div class="text-gray-300 text-sm">Tugatilgan darslar: ${student.completedLessons}</div>
+                    </div>
+                `).join('') || '<p class="text-gray-300">O\'quvchilar yo\'q</p>';
+                document.getElementById('studentProgressModal').classList.remove('hidden');
+            }).catch(err => alert('Progress yuklashda xato'));
+        }
+
+        function closeStudentProgressModal() {
+            document.getElementById('studentProgressModal').classList.add('hidden');
+        }
+
+        // Writing Assistant
+        function openWritingAssistant() {
+            document.getElementById('writingAssistantModal').classList.remove('hidden');
+        }
+
+        function closeWritingAssistantModal() {
+            document.getElementById('writingAssistantModal').classList.add('hidden');
+        }
+
+        async function checkWriting() {
+            const text = document.getElementById('writingText').value;
+            if (!text.trim()) return alert('Matn kiriting');
+
+            try {
+                const res = await fetch('/api/ai/writing-check', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const result = await res.json();
+                document.getElementById('writingResult').innerHTML = `
+                    <div class="text-white">
+                        <h4 class="font-bold mb-2">Baho: ${result.score}/10</h4>
+                        <p class="text-gray-300">${result.overallFeedback}</p>
+                        ${result.grammarMistakes?.length > 0 ? `<div class="mt-2"><h5 class="text-red-300">Xatolar:</h5><ul class="text-red-400">${result.grammarMistakes.map(m => `<li>${m.mistake} → ${m.correction}</li>`).join('')}</ul></div>` : ''}
+                        ${result.suggestions?.length > 0 ? `<div class="mt-2"><h5 class="text-blue-300">Takliflar:</h5><ul class="text-blue-400">${result.suggestions.map(s => `<li>${s}</li>`).join('')}</ul></div>` : ''}
+                    </div>
+                `;
+                document.getElementById('writingResult').classList.remove('hidden');
+            } catch (err) {
+                alert('Tekshirishda xato');
+            }
         }
 
         function getLevelText(level) {
-            const levels = {
-                'beginner': 'Boshlang\'ich',
-                'elementary': 'Elementar', 
-                'intermediate': 'O\'rta',
-                'upper-intermediate': 'Yuqori O\'rta',
-                'advanced': 'Ilg\'or'
-            };
+            const levels = { beginner: 'Boshlang\'ich', elementary: 'Elementar', intermediate: 'O\'rta', 'upper-intermediate': 'Yuqori O\'rta', advanced: 'Ilg\'or' };
             return levels[level] || level;
         }
 
-        // Chiqish funksiyasi
+        async function loadUserCoins() {
+            try {
+                const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const { user } = await res.json();
+                    document.getElementById('coinsCount').textContent = user.coins;
+                }
+            } catch (err) {
+                console.error('Coin yuklash xatosi:', err);
+            }
+        }
+
         function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/';
+            if (confirm('Chiqishni xohlaysizmi?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
         }
 
         // Sahifa yuklanganda
         document.addEventListener('DOMContentLoaded', () => {
             loadMyCourses();
-            // Boshlang'ich dars qo'shish
-            addLesson();
+            loadUserCoins();
+            addLesson(); // Birinchi dars uchun
         });
     </script>
 </body>

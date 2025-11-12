@@ -1,241 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurslar - EnglishMaster</title>
+    <title>Kurslar | EnglishMaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); }
+        .btn-glow { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); transform: scale(1.05); }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen text-white">
     <!-- Navigation -->
-    <nav class="bg-blue-600 text-white shadow-lg">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="/" class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-graduation-cap mr-2"></i>
-                    EnglishMaster
-                </a>
-                <div class="flex items-center space-x-6">
-                    <a href="/courses" class="font-semibold">Kurslar</a>
-                    <div id="authButtons" class="flex items-center space-x-4">
-                        <a href="/login" class="hover:text-blue-200 transition">Kirish</a>
-                        <a href="/register" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition">
-                            Ro'yxatdan o'tish
-                        </a>
-                    </div>
-                    <div id="userMenu" class="hidden flex items-center space-x-4">
-                        <a href="/" class="hover:text-blue-200 transition">Bosh Sahifa</a>
-                        <a href="/profile" class="hover:text-blue-200 transition">Profil</a>
-                        <a href="/teacher" class="hover:text-blue-200 transition">O'qituvchi</a>
-                        <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
-                            Chiqish
-                        </button>
-                    </div>
-                </div>
+    <nav class="glass fixed top-0 w-full z-50 py-4 px-6 shadow-2xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold flex items-center glass px-4 py-2 rounded-xl">
+                <i class="fas fa-graduation-cap mr-2"></i> EnglishMaster
+            </a>
+            <div class="flex items-center space-x-6">
+                <a href="/courses" class="glass px-4 py-2 rounded-xl font-semibold hover:bg-white/10 transition">Kurslar</a>
+                <a href="/profile" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">Profil</a>
+                <button onclick="openWritingAssistant()" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">
+                    <i class="fas fa-robot mr-2"></i> AI Writing
+                </button>
+                <span id="userCoins" class="glass px-4 py-2 rounded-xl font-semibold flex items-center">
+                    <i class="fas fa-coins mr-2"></i>
+                    <span id="coinsCount">0</span> coin
+                </span>
+                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-6 py-2 rounded-xl transition text-white font-semibold">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Chiqish
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Header -->
-    <div class="bg-white shadow">
-        <div class="container mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">Barcha Kurslar</h1>
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                <p class="text-gray-600">Ingliz tilini o'rganish uchun barcha kurslar</p>
-                <div class="flex space-x-4">
-                    <select id="levelFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                        <option value="">Barcha darajalar</option>
+    <div class="pt-20 container mx-auto px-4 py-12">
+        <div id="loading" class="text-center py-8 fade-in">
+            <div class="loading mx-auto mb-4"></div>
+            <p>Kurslar yuklanmoqda...</p>
+        </div>
+
+        <div id="coursesSection" class="hidden">
+            <!-- Filter va Qidirish -->
+            <div class="glass rounded-2xl p-4 mb-6">
+                <div class="flex flex-col md:flex-row gap-4 items-center">
+                    <input type="text" id="searchInput" placeholder="Kurs nomini yozing..." class="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <select id="levelFilter" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">Barcha Darajalar</option>
                         <option value="beginner">Boshlang'ich</option>
-                        <option value="elementary">Elementar</option>
                         <option value="intermediate">O'rta</option>
-                        <option value="upper-intermediate">Yuqori O'rta</option>
                         <option value="advanced">Ilg'or</option>
                     </select>
-                    <select id="priceFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                        <option value="">Barcha narxlar</option>
-                        <option value="free">Bepul</option>
-                        <option value="paid">Pullik</option>
+                    <select id="categoryFilter" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="">Barcha Kategoriyalar</option>
+                        <option value="General English">Umumiy Ingliz</option>
+                        <option value="Business">Biznes</option>
+                        <option value="Academic">Akademik</option>
                     </select>
+                    <button onclick="filterCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl text-white font-semibold">Filtr</button>
                 </div>
+            </div>
+
+            <!-- Kurslar Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="coursesGrid">
+                <!-- Kurslar yuklanadi -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="text-center mt-8 hidden">
+                <button onclick="changePage(-1)" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white mr-2 hover:bg-white/20">Oldingi</button>
+                <span id="pageInfo" class="text-white mx-4"></span>
+                <button onclick="changePage(1)" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white ml-2 hover:bg-white/20">Keyingi</button>
+            </div>
+        </div>
+
+        <div id="noCourses" class="hidden text-center py-12 fade-in">
+            <i class="fas fa-search text-6xl text-gray-200 mb-4"></i>
+            <h3 class="text-2xl font-semibold text-gray-200 mb-2">Kurslar topilmadi</h3>
+            <p class="text-gray-300 mb-4">Qidiruv so'zini o'zgartiring yoki barcha kurslarni ko'ring</p>
+            <button onclick="loadCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-white font-semibold">Barchasini yuklash</button>
+        </div>
+    </div>
+
+    <!-- Writing Assistant Modal -->
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-4">
+        <div class="glass rounded-2xl w-full max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">AI Writing Assistant</h3>
+                <button onclick="closeWritingModal()" class="text-gray-300 hover:text-white text-2xl">&times;</button>
+            </div>
+            <textarea id="writingText" rows="6" placeholder="Ingliz tilida matn yozing..." class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
+            <button onclick="checkWriting()" class="mt-4 w-full btn-glow bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl">Tekshirish</button>
+            <div id="writingResult" class="mt-4 hidden">
+                <h4 class="text-white font-bold">Natija:</h4>
+                <p id="writingFeedback" class="text-gray-200"></p>
             </div>
         </div>
     </div>
 
-    <!-- Courses Grid -->
-    <div class="container mx-auto px-4 py-8">
-        <div id="coursesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Kurslar JavaScript orqali yuklanadi -->
-        </div>
-        
-        <div id="loading" class="text-center py-8">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p class="text-gray-600 mt-4">Kurslar yuklanmoqda...</p>
-        </div>
-        
-        <div id="noCourses" class="hidden text-center py-12">
-            <i class="fas fa-book-open text-6xl text-gray-400 mb-4"></i>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">Kurslar topilmadi</h3>
-            <p class="text-gray-500">Filtr sozlamalarini o'zgartirib ko'ring</p>
-        </div>
-    </div>
-
     <script>
-        // Auth holatini tekshirish
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const authButtons = document.getElementById('authButtons');
-            const userMenu = document.getElementById('userMenu');
-            
-            if (token) {
-                authButtons.classList.add('hidden');
-                userMenu.classList.remove('hidden');
-            } else {
-                authButtons.classList.remove('hidden');
-                userMenu.classList.add('hidden');
-            }
-        }
-
-        // Chiqish funksiyasi
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/';
-        }
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
 
         let allCourses = [];
+        let filteredCourses = [];
+        let currentPage = 1;
+        const coursesPerPage = 6;
 
-        // Kurslarni yuklash
+        // Loading
+        document.getElementById('loading').style.display = 'block';
+
         async function loadCourses() {
             try {
                 const response = await fetch('/api/courses');
-                if (response.ok) {
-                    allCourses = await response.json();
-                    displayCourses(allCourses);
-                    document.getElementById('loading').classList.add('hidden');
-                }
+                if (!response.ok) throw new Error('Kurslar yuklashda xato');
+                allCourses = await response.json();
+                filteredCourses = [...allCourses];
+                displayCourses();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('coursesSection').classList.remove('hidden');
+                loadUserCoins();
             } catch (error) {
-                console.error('Kurslarni yuklashda xato:', error);
-                document.getElementById('loading').classList.add('hidden');
+                console.error('Kurslar yuklash xatosi:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('noCourses').classList.remove('hidden');
             }
         }
 
-        function displayCourses(courses) {
-            const container = document.getElementById('coursesList');
-            const noCourses = document.getElementById('noCourses');
-            
-            if (courses.length === 0) {
-                container.innerHTML = '';
-                noCourses.classList.remove('hidden');
+        function displayCourses() {
+            const start = (currentPage - 1) * coursesPerPage;
+            const end = start + coursesPerPage;
+            const pageCourses = filteredCourses.slice(start, end);
+
+            const grid = document.getElementById('coursesGrid');
+            grid.innerHTML = '';
+
+            if (pageCourses.length === 0) {
+                grid.innerHTML = '<p class="text-center text-gray-300 col-span-full py-8">Kurslar topilmadi</p>';
                 return;
             }
-            
-            noCourses.classList.add('hidden');
-            container.innerHTML = '';
 
-            courses.forEach(course => {
-                const courseCard = `
-                    <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition duration-300">
-                        <div class="h-48 bg-gradient-to-r from-blue-400 to-blue-600 flex items-center justify-center relative">
-                            ${course.image ? 
-                                `<img src="/uploads/${course.image}" alt="${course.title}" class="w-full h-full object-cover">` :
-                                `<i class="fas fa-book-open text-white text-6xl"></i>`
-                            }
-                            <div class="absolute top-4 right-4">
-                                <span class="bg-white text-blue-600 px-2 py-1 rounded-full text-sm font-semibold">
-                                    ${course.students?.length || 0} o'quvchi
-                                </span>
-                            </div>
+            pageCourses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'glass rounded-2xl overflow-hidden card-hover fade-in';
+                card.innerHTML = `
+                    <div class="h-48 relative overflow-hidden">
+                        ${course.image ? `<img src="/uploads/${course.image}" alt="${course.title}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">` : 
+                         `<div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                            <i class="fas fa-book-open text-white text-5xl"></i>
+                          </div>`}
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-white mb-2">${course.title}</h3>
+                        <p class="text-gray-300 mb-3 line-clamp-2">${course.description || 'Tavsif mavjud emas'}</p>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="glass px-3 py-1 rounded-full text-sm">${getLevelText(course.level)}</span>
+                            <span class="text-lg font-bold ${course.price === 0 ? 'text-green-400' : 'text-yellow-300'}">
+                                ${course.price === 0 ? 'Bepul' : course.price + ' coin'}
+                            </span>
                         </div>
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold mb-2 text-gray-800">${course.title}</h3>
-                            <p class="text-gray-600 mb-4 line-clamp-2">${course.description || 'Tavsif mavjud emas'}</p>
-                            
-                            <div class="flex items-center mb-4">
-                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-blue-600 text-sm font-semibold">
-                                        ${course.teacher?.firstName?.charAt(0) || 'A'}${course.teacher?.lastName?.charAt(0) || 'd'}
-                                    </span>
-                                </div>
-                                <span class="text-gray-600">${course.teacher?.firstName || 'Admin'} ${course.teacher?.lastName || ''}</span>
-                            </div>
-                            
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                    ${getLevelText(course.level)}
-                                </span>
-                                <span class="text-lg font-bold ${course.price === 0 ? 'text-green-600' : 'text-orange-600'}">
-                                    ${course.price === 0 ? 'Bepul' : course.price + ' coin'}
-                                </span>
-                            </div>
-                            
-                            <div class="flex justify-between items-center text-sm text-gray-500 mb-4">
-                                <span><i class="fas fa-book mr-1"></i> ${course.lessons?.length || 0} dars</span>
-                                <span><i class="fas fa-clock mr-1"></i> ${calculateTotalDuration(course.lessons)}</span>
-                            </div>
-                            
-                            <a href="/course/${course._id}" 
-                               class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-center transition duration-200">
-                                Kursni Ko'rish
-                            </a>
+                        <div class="text-sm text-gray-400 mb-4">
+                            <span><i class="fas fa-users mr-1"></i>${course.students?.length || 0} o'quvchi</span>
+                            <span class="ml-4"><i class="fas fa-clock mr-1"></i>${course.lessons?.length || 0} dars</span>
                         </div>
+                        <a href="/course/${course._id}" class="block w-full btn-glow bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-center transition">
+                            Kursni Ko'rish
+                        </a>
                     </div>
                 `;
-                container.innerHTML += courseCard;
+                grid.appendChild(card);
             });
+
+            updatePagination();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+            const pageInfo = document.getElementById('pageInfo');
+            const pagination = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                pagination.classList.add('hidden');
+                return;
+            }
+
+            pagination.classList.remove('hidden');
+            pageInfo.textContent = `${currentPage} / ${totalPages}`;
+
+            document.querySelector('#pagination button:first-child').disabled = currentPage === 1;
+            document.querySelector('#pagination button:last-child').disabled = currentPage === totalPages;
+        }
+
+        function changePage(delta) {
+            const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
+            currentPage += delta;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            displayCourses();
+        }
+
+        function filterCourses() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const level = document.getElementById('levelFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+
+            filteredCourses = allCourses.filter(course => {
+                const matchesSearch = course.title.toLowerCase().includes(search) || (course.description || '').toLowerCase().includes(search);
+                const matchesLevel = !level || course.level === level;
+                const matchesCategory = !category || course.category === category;
+                return matchesSearch && matchesLevel && matchesCategory;
+            });
+
+            currentPage = 1;
+            displayCourses();
         }
 
         function getLevelText(level) {
-            const levels = {
-                'beginner': 'Boshlang\'ich',
-                'elementary': 'Elementar', 
-                'intermediate': 'O\'rta',
-                'upper-intermediate': 'Yuqori O\'rta',
-                'advanced': 'Ilg\'or'
-            };
+            const levels = { beginner: 'Boshlang\'ich', elementary: 'Elementar', intermediate: 'O\'rta', 'upper-intermediate': 'Yuqori o\'rta', advanced: 'Ilg\'or' };
             return levels[level] || level;
         }
 
-        function calculateTotalDuration(lessons) {
-            if (!lessons || lessons.length === 0) return '0 min';
-            const totalMinutes = lessons.reduce((total, lesson) => total + (lesson.duration || 0), 0);
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            
-            if (hours > 0) {
-                return `${hours} soat ${minutes} min`;
-            }
-            return `${minutes} min`;
+        // Writing Assistant
+        function openWritingAssistant() {
+            document.getElementById('writingModal').classList.remove('hidden');
         }
 
-        // Filtrlash funksiyasi
-        function filterCourses() {
-            const levelFilter = document.getElementById('levelFilter').value;
-            const priceFilter = document.getElementById('priceFilter').value;
-            
-            let filteredCourses = allCourses;
-            
-            if (levelFilter) {
-                filteredCourses = filteredCourses.filter(course => course.level === levelFilter);
-            }
-            
-            if (priceFilter === 'free') {
-                filteredCourses = filteredCourses.filter(course => course.price === 0);
-            } else if (priceFilter === 'paid') {
-                filteredCourses = filteredCourses.filter(course => course.price > 0);
-            }
-            
-            displayCourses(filteredCourses);
+        function closeWritingModal() {
+            document.getElementById('writingModal').classList.add('hidden');
+            document.getElementById('writingResult').classList.add('hidden');
+            document.getElementById('writingText').value = '';
         }
 
-        // Sahifa yuklanganda
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAuth();
-            loadCourses();
-            
-            // Filtrlash eventlarini qo'shish
-            document.getElementById('levelFilter').addEventListener('change', filterCourses);
-            document.getElementById('priceFilter').addEventListener('change', filterCourses);
-        });
+        async function checkWriting() {
+            const text = document.getElementById('writingText').value.trim();
+            if (!text) return alert('Matn kiriting');
+
+            try {
+                const res = await fetch('/api/ai/writing-check', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text })
+                });
+                if (!res.ok) throw new Error('Tekshirish xatosi');
+                const result = await res.json();
+                document.getElementById('writingFeedback').innerHTML = `
+                    <div class="text-white font-bold mb-2">Baho: ${result.score}/10</div>
+                    <p class="text-gray-200">${result.overallFeedback}</p>
+                    ${result.grammarMistakes.length > 0 ? `<div class="mt-2"><strong>Xatolar:</strong><ul class="text-red-300">${result.grammarMistakes.map(m => `<li>${m.mistake} → ${m.correction}</li>`).join('')}</ul></div>` : '<p class="text-green-400">Xato topilmadi!</p>'}
+                    ${result.suggestions.length > 0 ? `<div class="mt-2"><strong>Takliflar:</strong><ul class="text-blue-300">${result.suggestions.map(s => `<li>${s}</li>`).join('')}</ul></div>` : ''}
+                `;
+                document.getElementById('writingResult').classList.remove('hidden');
+            } catch (err) {
+                alert('Tekshirishda xato: ' + err.message);
+            }
+        }
+
+        async function loadUserCoins() {
+            try {
+                const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const { user } = await res.json();
+                    document.getElementById('coinsCount').textContent = user.coins;
+                }
+            } catch (err) {
+                console.error('Coins yuklash xatosi:', err);
+            }
+        }
+
+        function logout() {
+            if (confirm('Chiqishni xohlaysizmi?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', () => setTimeout(filterCourses, 300));
+        document.getElementById('levelFilter').addEventListener('change', filterCourses);
+        document.getElementById('categoryFilter').addEventListener('change', filterCourses);
+
+        document.addEventListener('DOMContentLoaded', loadCourses);
     </script>
 </body>
 </html>

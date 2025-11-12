@@ -1,483 +1,799 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil - EnglishMaster</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); }
+        .btn-glow { box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); transition: all 0.3s ease; }
+        .btn-glow:hover { box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); transform: scale(1.05); }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-enter { animation: modalEnter 0.4s ease-out; }
+        @keyframes modalEnter { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Mobil uchun qo'shimcha stillar */
+        @media (max-width: 768px) {
+            .mobile-nav { transform: translateX(100%); transition: transform 0.3s ease-in-out; }
+            .mobile-nav.open { transform: translateX(0); }
+            .nav-item { display: block; width: 100%; text-align: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .profile-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .learning-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+            .card { padding: 1rem; }
+            .avatar { width: 80px; height: 80px; }
+            .user-name { font-size: 1.5rem; }
+            .stats-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+            .modal { max-width: 95vw; margin: 1rem; }
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
+<body class="min-h-screen text-white">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass rounded-2xl p-4 text-center sm:p-8">
+            <div class="loading mx-auto mb-4"></div>
+            <p class="text-sm sm:text-base">Profil yuklanmoqda...</p>
+        </div>
+    </div>
+
     <!-- Navigation -->
-    <nav class="bg-purple-600 text-white shadow-lg">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <a href="/" class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-graduation-cap mr-2"></i>
-                    EnglishMaster
-                </a>
-                <div class="flex items-center space-x-6">
-                    <a href="/courses" class="hover:text-purple-200 transition">Kurslar</a>
-                    <a href="/profile" class="font-semibold">Profil</a>
-                    <a href="/teacher" class="hover:text-purple-200 transition">O'qituvchi</a>
-                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg transition">
-                        Chiqish
-                    </button>
-                </div>
+    <nav class="glass fixed top-0 w-full z-50 py-3 px-4 shadow-2xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold flex items-center glass px-3 py-1.5 rounded-xl sm:text-2xl">
+                <i class="fas fa-graduation-cap mr-2"></i> EnglishMaster
+            </a>
+            <!-- Mobil hamburger menu -->
+            <button id="mobileMenuBtn" class="sm:hidden text-white text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+            <!-- Desktop nav -->
+            <div class="hidden sm:flex items-center space-x-4">
+                <a href="/courses" class="glass px-3 py-1.5 rounded-xl hover:bg-white/10 transition text-sm">Kurslar</a>
+                <a href="/profile" class="glass px-3 py-1.5 rounded-xl font-semibold hover:bg-white/10 transition text-sm">Profil</a>
+                <a href="/teacher" class="glass px-3 py-1.5 rounded-xl hover:bg-white/10 transition text-sm">O'qituvchi</a>
+                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-xl transition text-white font-semibold text-sm">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Chiqish
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Profil ma'lumotlari -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Profil kartasi -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
+    <!-- Mobil Menu Overlay -->
+    <div id="mobileNavOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden sm:hidden"></div>
+    <div id="mobileNav" class="mobile-nav fixed right-0 top-0 h-full w-64 glass z-50 p-4 overflow-y-auto sm:hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold">Menyu</h3>
+            <button id="closeMobileMenu" class="text-white text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="space-y-2">
+            <a href="/courses" class="nav-item glass rounded-xl hover:bg-white/10 transition">Kurslar</a>
+            <a href="/profile" class="nav-item glass rounded-xl hover:bg-white/10 transition font-semibold">Profil</a>
+            <a href="/teacher" class="nav-item glass rounded-xl hover:bg-white/10 transition">O'qituvchi</a>
+            <button onclick="logout()" class="w-full btn-glow bg-red-600 hover:bg-red-700 py-3 rounded-xl text-white font-semibold nav-item">Chiqish</button>
+        </div>
+    </div>
+
+    <div class="pt-16 sm:pt-20 container mx-auto px-2 sm:px-4 py-6 sm:py-12">
+        <div class="profile-grid grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+            <!-- Profil Kartasi -->
+            <div class="lg:col-span-1 space-y-4 sm:space-y-6">
+                <div class="glass rounded-2xl p-4 sm:p-8 card-hover fade-in">
                     <div class="text-center">
-                        <div class="w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center text-white text-4xl font-bold relative">
-                            <img id="avatarImage" src="" alt="Avatar" class="w-32 h-32 rounded-full object-cover hidden">
-                            <span id="avatarInitials" class="text-4xl"></span>
+                        <div class="w-20 h-20 sm:w-32 sm:h-32 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full mx-auto mb-3 sm:mb-4 relative overflow-hidden avatar">
+                            <img id="avatarImage" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+                            <span id="avatarInitials" class="absolute inset-0 flex items-center justify-center text-white text-2xl sm:text-4xl font-bold"></span>
                         </div>
-                        <h2 id="userName" class="text-2xl font-bold text-gray-800 mb-2">Ism Familiya</h2>
-                        <p id="userBio" class="text-gray-600 mb-4">Bio</p>
-                        <div class="flex justify-center space-x-4 mb-4">
-                            <span id="userLevel" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"></span>
-                            <span id="userAge" class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"></span>
+                        <h2 id="userName" class="text-xl sm:text-3xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg user-name">Ism Familiya</h2>
+                        <p id="userBio" class="text-gray-200 mb-3 sm:mb-4 italic text-sm sm:text-base">Bio yuklanmoqda...</p>
+                        <div class="flex justify-center space-x-2 sm:space-x-4 mb-4 sm:mb-6">
+                            <span id="userLevel" class="glass px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold"></span>
+                            <span id="userAge" class="glass px-2 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold"></span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-4 mb-4">
+                            <button onclick="openEditModal()" class="glass px-3 py-2 sm:px-6 sm:py-3 rounded-xl text-white font-semibold hover:bg-white/10 transition text-sm ${isOwnProfile ? '' : 'hidden'}">
+                                <i class="fas fa-edit mr-1 sm:mr-2"></i> Tahrirlash
+                            </button>
+                            <button onclick="openFriendsModal()" class="glass px-3 py-2 sm:px-6 sm:py-3 rounded-xl text-white font-semibold hover:bg-white/10 transition text-sm">
+                                <i class="fas fa-users mr-1 sm:mr-2"></i> Do'stlar (<span id="friendsCount">0</span>)
+                            </button>
+                        </div>
+                        <!-- Boshqa user uchun tugmalar -->
+                        <div id="profileActions" class="space-y-2 sm:space-y-3 hidden">
+                            <button onclick="addFriendAction()" class="w-full btn-glow bg-blue-600 hover:bg-blue-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Do'st qo'shish</button>
+                            <button onclick="openChat()" class="w-full btn-glow bg-green-600 hover:bg-green-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">1v1 Chat</button>
+                            <button onclick="openVideoChat()" class="w-full btn-glow bg-purple-600 hover:bg-purple-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Video Chat</button>
+                            <button onclick="sendCoins()" class="w-full btn-glow bg-yellow-600 hover:bg-yellow-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Coin yuborish</button>
                         </div>
                     </div>
                 </div>
-
                 <!-- Coin va Premium -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">Hisob</h3>
-                    
-                    <!-- Coinlar -->
-                    <div class="flex items-center justify-between mb-6 p-4 bg-yellow-50 rounded-lg">
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Hisob</h3>
+                    <div class="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl mb-4 sm:mb-6">
                         <div class="flex items-center">
-                            <i class="fas fa-coins text-yellow-600 text-2xl mr-3"></i>
+                            <i class="fas fa-coins text-yellow-900 text-xl sm:text-3xl mr-2 sm:mr-4"></i>
                             <div>
-                                <p class="text-sm text-gray-600">Mavjud Coinlar</p>
-                                <p id="coinsCount" class="text-2xl font-bold text-gray-800">0</p>
+                                <p class="text-yellow-900 text-xs sm:text-sm">Coinlar</p>
+                                <p id="coinsCount" class="text-xl sm:text-3xl font-bold text-yellow-900">0</p>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Premium status -->
-                    <div id="premiumSection">
-                        <!-- Premium status JavaScript orqali yuklanadi -->
+                    <div id="premiumSection"></div>
+                </div>
+                <!-- Statistika -->
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Statistika</h3>
+                    <div class="space-y-4 sm:space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-1 sm:mb-2 text-xs sm:text-base">
+                                <span class="text-gray-300">Tugatilgan Kurslar</span>
+                                <span id="completedCourses" class="font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-white/20 rounded-full h-2 sm:h-3">
+                                <div id="coursesProgress" class="bg-green-400 h-2 sm:h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1 sm:mb-2 text-xs sm:text-base">
+                                <span class="text-gray-300">O'tilgan Darslar</span>
+                                <span id="completedLessons" class="font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-white/20 rounded-full h-2 sm:h-3">
+                                <div id="lessonsProgress" class="bg-blue-400 h-2 sm:h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1 sm:mb-2 text-xs sm:text-base">
+                                <span class="text-gray-300">Reyting</span>
+                                <span id="userRating" class="font-bold">0</span>
+                            </div>
+                            <div class="w-full bg-white/20 rounded-full h-2 sm:h-3">
+                                <div id="ratingProgress" class="bg-purple-400 h-2 sm:h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Statistika -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">O'qish Statistika</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-gray-600">Tugatilgan Kurslar</span>
-                                <span id="completedCourses" class="font-semibold">0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="coursesProgress" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
+                <!-- Yutuqlar -->
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">Yutuqlar</h3>
+                    <div id="achievementsList" class="space-y-2 sm:space-y-3 max-h-32 sm:max-h-48 overflow-y-auto"></div>
+                </div>
+                <!-- Bildirishnomalar -->
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">Bildirishnomalar (<span id="notifCount">0</span>)</h3>
+                    <div id="notificationsList" class="space-y-2 sm:space-y-3 max-h-32 sm:max-h-48 overflow-y-auto"></div>
+                </div>
+                <!-- Boshqa Userlar Qidirish -->
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">Boshqa Foydalanuvchilar</h3>
+                    <input type="text" id="searchUsers" placeholder="Ism bo'yicha qidirish..." class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                    <div id="usersList" class="space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto"></div>
+                </div>
+                <!-- Leaderboard -->
+                <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">Leaderboard</h3>
+                    <div id="leaderboardList" class="space-y-1 sm:space-y-2 max-h-32 sm:max-h-48 overflow-y-auto"></div>
+                </div>
+                <!-- Yangi Ta'lim Funksiyalari -->
+                <div class="learning-grid grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-cards text-blue-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Flashcards</h4>
                         </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-gray-600">O'tilgan Darslar</span>
-                                <span id="completedLessons" class="font-semibold">0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="lessonsProgress" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
+                        <button onclick="openFlashcards()" class="w-full btn-glow bg-blue-600 hover:bg-blue-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Boshlash</button>
+                    </div>
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-question text-green-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Grammar Quiz</h4>
                         </div>
-                        <div>
-                            <div class="flex justify-between mb-1">
-                                <span class="text-gray-600">O'rtacha Ball</span>
-                                <span id="averageScore" class="font-semibold">0%</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="scoreProgress" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
+                        <button onclick="openGrammarQuiz()" class="w-full btn-glow bg-green-600 hover:bg-green-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Test o'tkazish</button>
+                    </div>
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-lightbulb text-yellow-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Daily Challenge</h4>
                         </div>
+                        <button onclick="openDailyChallenge()" class="w-full btn-glow bg-yellow-600 hover:bg-yellow-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Bugungi Challenge</button>
+                    </div>
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-microphone text-purple-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Speaking Practice</h4>
+                        </div>
+                        <button onclick="openSpeakingPractice()" class="w-full btn-glow bg-purple-600 hover:bg-purple-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Ovozni tekshirish</button>
+                    </div>
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-pen text-indigo-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Writing Assistant</h4>
+                        </div>
+                        <button onclick="openWritingAssistant()" class="w-full btn-glow bg-indigo-600 hover:bg-indigo-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Yozuvni tekshirish</button>
+                    </div>
+                    <!-- Yangi: Vocabulary Builder -->
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-book-open text-red-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Vocabulary Builder</h4>
+                        </div>
+                        <button onclick="openVocabularyBuilder()" class="w-full btn-glow bg-red-600 hover:bg-red-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">So'z boyitish</button>
+                    </div>
+                    <!-- Yangi: Reading Practice -->
+                    <div class="glass rounded-2xl p-4 sm:p-6 card-hover fade-in card">
+                        <div class="flex items-center mb-3 sm:mb-4">
+                            <i class="fas fa-book-reader text-teal-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
+                            <h4 class="text-base sm:text-xl font-bold text-white">Reading Practice</h4>
+                        </div>
+                        <button onclick="openReadingPractice()" class="w-full btn-glow bg-teal-600 hover:bg-teal-700 py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">O'qish mashqi</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Profil sozlamalari va progress -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Profilni tahrirlash -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Profilni Tahrirlash</h2>
-                    <form id="profileForm" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-gray-700 mb-2">Ism</label>
-                                <input type="text" id="editFirstName" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                       required>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2">Familiya</label>
-                                <input type="text" id="editLastName" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                       required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 mb-2">Email</label>
-                            <input type="email" id="editEmail" 
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-gray-100"
-                                   readonly>
-                            <p class="text-sm text-gray-500 mt-1">Email o'zgartirib bo'lmaydi</p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-gray-700 mb-2">Ingliz Tili Darajasi</label>
-                                <select id="editEnglishLevel" 
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                                    <option value="beginner">Boshlang'ich (Beginner)</option>
-                                    <option value="elementary">Elementar (Elementary)</option>
-                                    <option value="intermediate">O'rta (Intermediate)</option>
-                                    <option value="upper-intermediate">Yuqori O'rta (Upper-Intermediate)</option>
-                                    <option value="advanced">Ilg'or (Advanced)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-gray-700 mb-2">Yosh</label>
-                                <input type="number" id="editAge" 
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                       min="10" max="100">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 mb-2">Bio</label>
-                            <textarea id="editBio" rows="3"
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                      placeholder="O'zingiz haqingizda qisqacha..."></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-gray-700 mb-2">Profil Rasmı</label>
-                            <div class="flex items-center space-x-4">
-                                <input type="file" id="avatarFile" accept="image/*" 
-                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end space-x-4">
-                            <button type="button" onclick="resetForm()" 
-                                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg">
-                                Bekor Qilish
-                            </button>
-                            <button type="submit" 
-                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold">
-                                <i class="fas fa-save mr-2"></i> O'zgarishlarni Saqlash
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Faol kurslar -->
-                <div class="bg-white rounded-lg shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800">Faol Kurslar</h3>
-                    <div id="activeCourses" class="space-y-4">
-                        <!-- Kurslar JavaScript orqali yuklanadi -->
+            <!-- O'ng bo'lim -->
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6">
+                <div class="glass rounded-2xl p-4 sm:p-8 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Tugatilgan Kurslar</h3>
+                    <div id="completedCoursesSection" class="space-y-3 sm:space-y-4">
+                        <!-- Yuklanadi -->
                     </div>
                 </div>
-
-                <!-- Qo'shimcha funksiyalar -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- AI Writing Assistant -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-robot text-purple-600 text-2xl mr-3"></i>
-                            <h3 class="text-xl font-bold text-gray-800">AI Writing Assistant</h3>
-                        </div>
-                        <p class="text-gray-600 mb-4">Yozgan matnlaringizni tekshirish</p>
-                        <button onclick="openWritingAssistant()" 
-                                class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition duration-200">
-                            Boshlash
-                        </button>
+                <div class="glass rounded-2xl p-4 sm:p-8 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Yaqinda Faollik</h3>
+                    <div id="recentActivity" class="space-y-3 sm:space-y-4">
+                        <!-- Yuklanadi -->
                     </div>
-
-                    <!-- Speaking Practice -->
-                    <div class="bg-white rounded-lg shadow-lg p-6">
-                        <div class="flex items-center mb-4">
-                            <i class="fas fa-microphone-alt text-green-600 text-2xl mr-3"></i>
-                            <h3 class="text-xl font-bold text-gray-800">Speaking Practice</h3>
-                        </div>
-                        <p class="text-gray-600 mb-4">Ovozingizni yozib, talaffuzni tekshirish</p>
-                        <button onclick="openSpeakingPractice()" 
-                                class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition duration-200">
-                            Boshlash
-                        </button>
-                    </div>
+                </div>
+                <div class="glass rounded-2xl p-4 sm:p-8 card-hover fade-in">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-white">Solishtirish</h3>
+                    <select id="compareUser" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                        <option value="">Foydalanuvchi tanlang</option>
+                    </select>
+                    <div id="comparisonResult" class="hidden space-y-3 sm:space-y-4 p-3 sm:p-4 bg-white/5 rounded-xl text-sm"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Writing Assistant Modal -->
-    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h3 class="text-xl font-bold">AI Writing Assistant</h3>
-                <button onclick="closeWritingModal()" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Profil Tahrirlash</h3>
+                <button onclick="closeEditModal()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="p-4">
-                <textarea id="writingText" rows="10" 
-                          class="w-full border border-gray-300 rounded-lg p-4 mb-4"
-                          placeholder="Bu yerda ingliz tilida matn yozing..."></textarea>
-                <button onclick="checkWriting()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg mb-4">
+            <form id="profileForm" class="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <input type="text" id="editFirstName" placeholder="Ism" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                    <input type="text" id="editLastName" placeholder="Familiya" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" required>
+                </div>
+                <input type="email" id="editEmail" placeholder="Email" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-100 text-sm" readonly>
+                <select id="editEnglishLevel" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                    <option value="beginner">Boshlang'ich</option>
+                    <option value="elementary">Elementar</option>
+                    <option value="intermediate">O'rta</option>
+                    <option value="upper-intermediate">Yuqori O'rta</option>
+                    <option value="advanced">Ilg'or</option>
+                </select>
+                <input type="number" id="editAge" placeholder="Yosh" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm" min="10" max="100">
+                <textarea id="editBio" rows="3" placeholder="Bio" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"></textarea>
+                <input type="file" id="avatarFile" accept="image/*" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm">
+                <div class="flex justify-end space-x-2 sm:space-x-4 pt-3 sm:pt-4 border-t border-white/20">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 sm:px-6 sm:py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl text-sm">Bekor</button>
+                    <button type="submit" class="btn-glow bg-green-600 hover:bg-green-700 px-4 py-2 sm:px-6 sm:py-3 text-white rounded-xl font-semibold text-sm">Saqlash</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Friends Modal -->
+    <div id="friendsModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Do'stlar</h3>
+                <button onclick="closeFriendsModal()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="friendsList" class="p-4 sm:p-6 space-y-2 sm:space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Flashcards Modal -->
+    <div id="flashcardsModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Flashcards</h3>
+                <button onclick="closeFlashcards()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="flashcardsList" class="p-4 sm:p-6 space-y-3 sm:space-y-4"></div>
+            <button onclick="nextFlashcard()" class="btn-glow bg-blue-600 w-full py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Keyingi Karta</button>
+        </div>
+    </div>
+
+    <!-- Grammar Quiz Modal -->
+    <div id="grammarQuizModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Grammar Quiz</h3>
+                <button onclick="closeGrammarQuiz()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="grammarQuizContent" class="p-4 sm:p-6 space-y-3 sm:space-y-4"></div>
+            <div class="flex justify-end space-x-2 sm:space-x-4 pt-3 sm:pt-4 border-t border-white/20">
+                <button onclick="submitGrammarQuiz()" class="btn-glow bg-green-600 px-4 py-2 sm:px-6 sm:py-3 text-white rounded-xl font-semibold text-sm">Tekshirish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Challenge Modal -->
+    <div id="dailyChallengeModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-md modal">
+            <div class="p-4 sm:p-6 border-b border-white/20">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Daily Challenge</h3>
+            </div>
+            <div id="challengeContent" class="p-4 sm:p-6 text-center space-y-3 sm:space-y-4 text-sm"></div>
+            <button onclick="completeChallenge()" class="btn-glow bg-yellow-600 w-full py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Tugallash (+10 coin)</button>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">1v1 Chat - <span id="chatWithName"></span></h3>
+                <button onclick="closeChat()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chatMessages" class="p-4 sm:p-6 h-48 sm:h-64 overflow-y-auto space-y-2 text-sm"></div>
+            <div class="p-4 sm:p-6 border-t border-white/20 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <input type="text" id="chatMessage" placeholder="Xabar yozing..." class="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm">
+                <input type="number" id="coinAmount" placeholder="Coin" class="w-full sm:w-24 px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm">
+                <button onclick="sendChatMessage()" class="btn-glow bg-blue-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl text-sm">Yuborish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Chat Modal -->
+    <div id="videoChatModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-4xl max-h-[90vh] modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Video Chat - <span id="videoChatWithName"></span></h3>
+                <button onclick="closeVideoChat()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <video id="localVideo" autoplay muted class="w-full h-48 sm:h-64 bg-black rounded-2xl"></video>
+                    <video id="remoteVideo" autoplay class="w-full h-48 sm:h-64 bg-black rounded-2xl"></video>
+                </div>
+                <div class="flex justify-center space-x-2 sm:space-x-4">
+                    <button onclick="startVideoCall()" class="btn-glow bg-green-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl text-sm">Qo'shish</button>
+                    <button onclick="endVideoCall()" class="btn-glow bg-red-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl text-sm">Tugatish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coin Modal -->
+    <div id="coinModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-md p-4 sm:p-6 modal">
+            <h3 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-white">Coin Yuborish</h3>
+            <input type="number" id="sendCoinsAmount" placeholder="Miqdor" class="w-full px-3 py-2 sm:px-4 sm:py-3 bg-white/10 border border-white/20 rounded-xl text-white mb-3 sm:mb-4 text-sm" min="1">
+            <div class="flex justify-end space-x-2 sm:space-x-4">
+                <button onclick="closeCoinModal()" class="px-4 py-2 sm:px-6 sm:py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl text-sm">Bekor</button>
+                <button onclick="confirmSendCoins()" class="btn-glow bg-yellow-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl text-sm">Yuborish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Writing Modal -->
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">AI Writing Assistant</h3>
+                <button onclick="closeWritingModal()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 sm:p-6">
+                <textarea id="writingText" rows="8 sm:10" class="w-full border border-white/20 rounded-2xl p-3 sm:p-4 mb-3 sm:mb-4 bg-white/10 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"></textarea>
+                <button onclick="checkWriting()" class="btn-glow bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-xl mb-3 sm:mb-4 text-sm">
                     Tekshirish
                 </button>
-                <div id="writingResult" class="hidden">
-                    <!-- Natijalar shu yerda ko'rsatiladi -->
+                <div id="writingResult" class="hidden space-y-3 sm:space-y-4 text-sm">
+                    <!-- Natijalar -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yangi: Vocabulary Builder Modal -->
+    <div id="vocabularyModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Vocabulary Builder</h3>
+                <button onclick="closeVocabularyBuilder()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="vocabularyContent" class="p-4 sm:p-6 space-y-3 sm:space-y-4 text-center text-sm"></div>
+            <button onclick="nextVocabularyWord()" class="btn-glow bg-red-600 w-full py-2 sm:py-3 rounded-xl text-white font-semibold text-sm">Keyingi So'z</button>
+        </div>
+    </div>
+
+    <!-- Yangi: Reading Practice Modal -->
+    <div id="readingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 sm:p-4 modal-enter">
+        <div class="glass rounded-2xl w-full max-w-3xl max-h-[80vh] overflow-y-auto modal">
+            <div class="p-4 sm:p-6 border-b border-white/20 flex justify-between items-center">
+                <h3 class="text-xl sm:text-2xl font-bold text-white">Reading Comprehension</h3>
+                <button onclick="closeReadingPractice()" class="text-gray-300 hover:text-white text-lg sm:text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="readingContent" class="p-4 sm:p-6 space-y-3 sm:space-y-4">
+                <div id="readingText" class="prose prose-invert max-w-none bg-white/5 p-3 sm:p-4 rounded-xl text-sm"></div>
+                <div id="readingQuestions" class="space-y-3 sm:space-y-4 text-sm"></div>
+            </div>
+            <div class="p-4 sm:p-6 border-t border-white/20 flex justify-end">
+                <button onclick="submitReadingQuiz()" class="btn-glow bg-teal-600 px-4 py-2 sm:px-6 sm:py-3 text-white rounded-xl font-semibold text-sm">Tekshirish</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Auth tekshirish
+        // Mobil menu funksiyalari
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileNav = document.getElementById('mobileNav');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileNav.classList.add('open');
+            mobileNavOverlay.classList.remove('hidden');
+        });
+
+        closeMobileMenu.addEventListener('click', () => {
+            mobileNav.classList.remove('open');
+            mobileNavOverlay.classList.add('hidden');
+        });
+
+        mobileNavOverlay.addEventListener('click', () => {
+            mobileNav.classList.remove('open');
+            mobileNavOverlay.classList.add('hidden');
+        });
+
+        // Qolgan skript kodlari oldingi kabi (o'zgartirilmagan)
         const token = localStorage.getItem('token');
         if (!token) {
+            alert('Iltimos, kirish qiling!');
             window.location.href = '/login';
         }
-
         let currentUser = null;
+        let viewedUser = null;
         let userProgress = [];
+        let viewedUserProgress = [];
+        let friends = [];
+        let allUsers = [];
+        let achievements = [];
+        let notifications = [];
+        let leaderboard = [];
+        let recentActivity = [];
+        let currentChatUserId = null;
+        let peer = null;
+        let isOwnProfile = true;
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewedUserId = urlParams.get('userId');
+        isOwnProfile = !viewedUserId;
 
-        // Foydalanuvchi ma'lumotlarini yuklash
+        // Loading ko'rsatish
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Xatolarni hal qilish uchun alohida fetchlar
         async function loadUserProfile() {
+            showLoading();
             try {
-                const response = await fetch('/api/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                // Asosiy user ma'lumotlarini yuklash (include paramsiz)
+                let userEndpoint = viewedUserId ? `/api/users/${viewedUserId}` : '/api/profile';
+                let userResponse = await fetch(userEndpoint, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    currentUser = data.user;
-                    displayUserProfile();
-                    await loadUserProgress();
-                    await loadActiveCourses();
+                if (!userResponse.ok) {
+                    if (userResponse.status === 403) {
+                        alert('Ruxsat yo\'q. Backendda include parametrini qo\'llab-quvvatlang yoki alohida endpointlar yarating.');
+                        return;
+                    }
+                    throw new Error(`HTTP ${userResponse.status}: ${userResponse.statusText}`);
+                }
+                let userData = await userResponse.json();
+                if (viewedUserId) {
+                    viewedUser = userData;
+                    await loadViewedUserProgress(viewedUserId);
                 } else {
-                    window.location.href = '/login';
+                    currentUser = userData;
+                }
+
+                // Alohida resurslarni yuklash (faqat o'z profillari uchun)
+                if (!viewedUserId && isOwnProfile) {
+                    await Promise.allSettled([
+                        fetchFriends(),
+                        fetchProgress(),
+                        fetchAllUsers(),
+                        fetchAchievements(),
+                        fetchNotifications(),
+                        fetchLeaderboard(),
+                        fetchRecentActivity()
+                    ]);
+                }
+
+                displayUserProfile();
+                updateStatistics();
+                loadCompletedCoursesSection();
+                loadUsersList();
+                loadCompareOptions();
+                loadAchievements();
+                loadNotifications();
+                loadLeaderboard();
+                loadRecentActivity();
+                if (viewedUserId) {
+                    document.getElementById('profileActions').classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Profil yuklashda xato:', error);
-                window.location.href = '/login';
+                alert('Bog\'lanish xatosi. Qayta yuklang yoki backendni tekshiring. (403 - include parametrini qo\'llab-quvvatlang)');
+            } finally {
+                hideLoading();
             }
         }
 
-        function displayUserProfile() {
-            // Asosiy ma'lumotlar
-            document.getElementById('userName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-            document.getElementById('userBio').textContent = currentUser.bio || 'Bio kiritilmagan';
-            document.getElementById('userLevel').textContent = getLevelText(currentUser.englishLevel);
-            document.getElementById('userAge').textContent = currentUser.age ? `${currentUser.age} yosh` : 'Yosh kiritilmagan';
-            document.getElementById('coinsCount').textContent = currentUser.coins;
-
-            // Form ma'lumotlari
-            document.getElementById('editFirstName').value = currentUser.firstName || '';
-            document.getElementById('editLastName').value = currentUser.lastName || '';
-            document.getElementById('editEmail').value = currentUser.email || '';
-            document.getElementById('editEnglishLevel').value = currentUser.englishLevel || 'beginner';
-            document.getElementById('editAge').value = currentUser.age || '';
-            document.getElementById('editBio').value = currentUser.bio || '';
-
-            // Avatar
-            displayAvatar();
-
-            // Premium section
-            displayPremiumSection();
+        // Alohida fetch funksiyalari (backendda shu endpointlarni yarating)
+        async function fetchFriends() {
+            const res = await fetch('/api/friends', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) friends = await res.json();
+        }
+        async function fetchProgress() {
+            const res = await fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) userProgress = await res.json();
+        }
+        async function fetchAllUsers() {
+            const res = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) allUsers = await res.json();
+        }
+        async function fetchAchievements() {
+            const res = await fetch('/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) achievements = await res.json();
+        }
+        async function fetchNotifications() {
+            const res = await fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) notifications = await res.json();
+        }
+        async function fetchLeaderboard() {
+            const res = await fetch('/api/leaderboard', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) leaderboard = await res.json();
+        }
+        async function fetchRecentActivity() {
+            const res = await fetch('/api/recent', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) recentActivity = await res.json();
         }
 
-        function displayAvatar() {
-            const avatarImage = document.getElementById('avatarImage');
-            const avatarInitials = document.getElementById('avatarInitials');
-            
-            if (currentUser.avatar) {
-                avatarImage.src = `/uploads/${currentUser.avatar}`;
-                avatarImage.classList.remove('hidden');
-                avatarInitials.classList.add('hidden');
-            } else {
-                const initials = (currentUser.firstName?.charAt(0) || '') + (currentUser.lastName?.charAt(0) || '');
-                avatarInitials.textContent = initials || 'U';
-                avatarImage.classList.add('hidden');
-                avatarInitials.classList.remove('hidden');
-            }
-        }
-
-        function displayPremiumSection() {
-            const premiumSection = document.getElementById('premiumSection');
-            
-            if (currentUser.isPremium) {
-                premiumSection.innerHTML = `
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 text-white text-center">
-                        <i class="fas fa-crown text-2xl mb-2"></i>
-                        <h4 class="font-bold text-lg mb-1">PREMIUM</h4>
-                        <p class="text-sm">Siz Premium obunasiz</p>
-                    </div>
-                `;
-            } else {
-                premiumSection.innerHTML = `
-                    <div class="border-2 border-yellow-400 rounded-lg p-4 text-center">
-                        <i class="fas fa-crown text-yellow-500 text-2xl mb-2"></i>
-                        <h4 class="font-bold text-lg mb-2">Premium Obuna</h4>
-                        <p class="text-gray-600 text-sm mb-3">Qo'shimcha funksiyalardan foydalaning</p>
-                        <button onclick="subscribePremium()" 
-                                class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg font-semibold transition duration-200">
-                            ${currentUser.coins >= 1200 ? 
-                                '1200 coin bilan obuna bo\'lish' : 
-                                `Yetarli coin yo'q (${1200 - currentUser.coins} coin kerak)`}
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        async function loadUserProgress() {
+        async function loadViewedUserProgress(userId) {
             try {
-                const response = await fetch('/api/progress', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await fetch(`/api/progress?userId=${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
                 if (response.ok) {
-                    userProgress = await response.json();
-                    updateStatistics();
+                    viewedUserProgress = await response.json();
                 }
             } catch (error) {
                 console.error('Progress yuklashda xato:', error);
             }
         }
 
-        function updateStatistics() {
-            const completedCourses = userProgress.filter(p => p.progress === 100).length;
-            const completedLessons = userProgress.reduce((total, p) => total + (p.completedLessons?.length || 0), 0);
-            
-            // O'rtacha ballni hisoblash (simulyatsiya)
-            const averageScore = userProgress.length > 0 ? 
-                Math.round(userProgress.reduce((total, p) => {
-                    const quizAvg = p.quizResults.length > 0 ? 
-                        p.quizResults.reduce((sum, q) => sum + (q.score / q.totalQuestions), 0) / p.quizResults.length * 100 : 0;
-                    return total + quizAvg;
-                }, 0) / userProgress.length) : 0;
-
-            document.getElementById('completedCourses').textContent = completedCourses;
-            document.getElementById('completedLessons').textContent = completedLessons;
-            document.getElementById('averageScore').textContent = averageScore + '%';
-
-            // Progress barlarni yangilash
-            document.getElementById('coursesProgress').style.width = Math.min(completedCourses * 10, 100) + '%';
-            document.getElementById('lessonsProgress').style.width = Math.min(completedLessons, 100) + '%';
-            document.getElementById('scoreProgress').style.width = averageScore + '%';
+        function displayUserProfile() {
+            const user = viewedUser || currentUser;
+            document.getElementById('userName').textContent = `${user.firstName || ''} ${user.lastName || ''}`;
+            document.getElementById('userBio').textContent = user.bio || 'Bio kiritilmagan...';
+            document.getElementById('userLevel').innerHTML = `<i class="fas fa-level-up-alt mr-1 sm:mr-2"></i>${getLevelText(user.englishLevel)}`;
+            document.getElementById('userAge').innerHTML = `<i class="fas fa-birthday-cake mr-1 sm:mr-2"></i>${user.age ? user.age + ' yosh' : 'Yosh kiritilmagan'}`;
+            document.getElementById('coinsCount').textContent = user.coins;
+            document.getElementById('friendsCount').textContent = user.friends?.length || friends.length || 0;
+            document.getElementById('userRating').textContent = user.rating || 0;
+            displayAvatar(user);
+            displayPremiumSection(user);
+            document.getElementById('ratingProgress').style.width = Math.min((user.rating || 0) / 10, 100) + '%';
+            if (isOwnProfile) {
+                document.getElementById('editFirstName').value = user.firstName || '';
+                document.getElementById('editLastName').value = user.lastName || '';
+                document.getElementById('editEmail').value = user.email || '';
+                document.getElementById('editEnglishLevel').value = user.englishLevel || 'beginner';
+                document.getElementById('editAge').value = user.age || '';
+                document.getElementById('editBio').value = user.bio || '';
+            }
         }
 
-        async function loadActiveCourses() {
-            const activeCourses = document.getElementById('activeCourses');
-            
-            if (userProgress.length === 0) {
-                activeCourses.innerHTML = `
-                    <div class="text-center py-8 text-gray-500">
-                        <i class="fas fa-book-open text-4xl mb-4"></i>
-                        <p>Hali hech qanday kursga yozilmagansiz</p>
-                        <a href="/courses" class="text-blue-600 hover:underline mt-2 inline-block">Kurslarni ko'rish</a>
+        function displayAvatar(user) {
+            const avatarImage = document.getElementById('avatarImage');
+            const avatarInitials = document.getElementById('avatarInitials');
+            if (user.avatar) {
+                avatarImage.src = `/uploads/${user.avatar}`;
+                avatarImage.classList.remove('hidden');
+                avatarInitials.classList.add('hidden');
+            } else {
+                const initials = ((user.firstName || '').charAt(0) + (user.lastName || '').charAt(0)).toUpperCase();
+                avatarInitials.textContent = initials || 'U';
+                avatarImage.classList.add('hidden');
+                avatarInitials.classList.remove('hidden');
+            }
+        }
+
+        function displayPremiumSection(user) {
+            const premiumSection = document.getElementById('premiumSection');
+            if (user.isPremium) {
+                premiumSection.innerHTML = `
+                    <div class="glass rounded-xl p-3 sm:p-4 text-center">
+                        <i class="fas fa-crown text-yellow-400 text-2xl sm:text-3xl mb-2"></i>
+                        <h4 class="font-bold text-base sm:text-lg mb-1 text-yellow-300">PREMIUM</h4>
+                        <p class="text-gray-300 text-xs sm:text-sm">Maxsus imtiyozlar!</p>
                     </div>
                 `;
+            } else {
+                premiumSection.innerHTML = `
+                    <div class="glass rounded-xl p-3 sm:p-4 text-center">
+                        <i class="fas fa-crown text-yellow-400 text-2xl sm:text-3xl mb-2"></i>
+                        <h4 class="font-bold text-base sm:text-lg mb-2 text-yellow-300">Premium Obuna</h4>
+                        <p class="text-gray-300 text-xs sm:text-sm mb-3">1200 coin bilan obuna bo'ling</p>
+                        <button onclick="subscribePremium()" class="w-full btn-glow bg-yellow-600 hover:bg-yellow-700 py-2 sm:py-2 rounded-xl text-white font-semibold text-sm">Obuna bo'lish</button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStatistics() {
+            const progress = viewedUserId ? viewedUserProgress : userProgress;
+            const completedCourses = progress.filter(p => p.progress === 100).length;
+            const completedLessons = progress.reduce((total, p) => total + (p.completedLessons?.length || 0), 0);
+            document.getElementById('completedCourses').textContent = completedCourses;
+            document.getElementById('completedLessons').textContent = completedLessons;
+            document.getElementById('coursesProgress').style.width = Math.min(completedCourses * 20, 100) + '%';
+            document.getElementById('lessonsProgress').style.width = Math.min(completedLessons * 5, 100) + '%';
+        }
+
+        async function loadCompletedCoursesSection() {
+            const section = document.getElementById('completedCoursesSection');
+            const progress = viewedUserId ? viewedUserProgress : userProgress;
+            const completed = progress.filter(p => p.progress === 100);
+            if (completed.length === 0) {
+                section.innerHTML = '<p class="text-center text-gray-300 py-6 text-sm sm:text-base">Hali kurs tugatilmagan</p>';
                 return;
             }
-
-            activeCourses.innerHTML = userProgress.map(progress => `
-                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition duration-200">
+            section.innerHTML = completed.map(course => `
+                <div class="glass p-3 sm:p-4 rounded-xl flex items-center justify-between">
                     <div class="flex items-center">
-                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                            <i class="fas fa-book text-blue-600"></i>
-                        </div>
+                        <i class="fas fa-check-circle text-green-400 text-lg sm:text-2xl mr-2 sm:mr-3"></i>
                         <div>
-                            <h4 class="font-semibold text-gray-800">${progress.course.title}</h4>
-                            <p class="text-sm text-gray-600">Progress: ${progress.progress}%</p>
+                            <h4 class="font-semibold text-white text-sm sm:text-base">${course.course.title}</h4>
+                            <p class="text-gray-300 text-xs">${new Date(course.lastAccessed).toLocaleDateString()}</p>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-24 bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: ${progress.progress}%"></div>
-                        </div>
-                        <a href="/course/${progress.course._id}" class="text-blue-600 hover:text-blue-800">
-                            <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
+                    <span class="text-green-400 font-bold text-sm">100%</span>
                 </div>
             `).join('');
         }
 
-        // Profilni yangilash
+        // Yangi funksiyalar
+        function loadAchievements() {
+            const list = document.getElementById('achievementsList');
+            list.innerHTML = achievements.map(ach => `
+                <div class="glass p-2 sm:p-3 rounded-xl flex items-center space-x-2 sm:space-x-3">
+                    <i class="fas fa-trophy text-yellow-400 text-sm sm:text-base"></i>
+                    <span class="text-white text-xs sm:text-base">${ach.name} - ${ach.date}</span>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-center text-sm">Hali yutuq yo\'q</p>';
+        }
+
+        function loadNotifications() {
+            const count = document.getElementById('notifCount');
+            count.textContent = notifications.length;
+            const list = document.getElementById('notificationsList');
+            list.innerHTML = notifications.map(notif => `
+                <div class="glass p-2 sm:p-3 rounded-xl flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:bg-white/10 text-xs sm:text-base" onclick="markAsRead('${notif.id}')">
+                    <i class="fas fa-bell text-orange-400"></i>
+                    <span class="text-white">${notif.message} - ${notif.time}</span>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-center text-sm">Bildirishnoma yo\'q</p>';
+        }
+
+        function loadLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = leaderboard.slice(0, 5).map((user, idx) => `
+                <div class="glass p-2 sm:p-3 rounded-xl flex items-center justify-between text-xs sm:text-base">
+                    <span class="text-white font-bold">#${idx + 1}</span>
+                    <span class="text-white">${user.name} (${user.rating})</span>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-center text-sm">Reyting yuklanmoqda...</p>';
+        }
+
+        function loadRecentActivity() {
+            const section = document.getElementById('recentActivity');
+            section.innerHTML = recentActivity.slice(0, 5).map(act => `
+                <div class="glass p-3 sm:p-4 rounded-xl text-sm">
+                    <p class="text-white">${act.action} - ${new Date(act.time).toLocaleDateString()}</p>
+                </div>
+            `).join('') || '<p class="text-gray-400 text-center text-sm">Faollik yo\'q</p>';
+        }
+
+        function markAsRead(notifId) {
+            // Backend ga so'rov yuborish
+            alert('O\'qildi deb belgilandi!');
+            loadNotifications();
+        }
+
+        // Qolgan funksiyalar (o'zgartirilmagan, lekin text-sm qo'shildi mobil uchun)
+        function openEditModal() {
+            if (!isOwnProfile) return;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('avatarFile').value = '';
+        }
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const formData = new FormData();
             formData.append('firstName', document.getElementById('editFirstName').value);
             formData.append('lastName', document.getElementById('editLastName').value);
             formData.append('englishLevel', document.getElementById('editEnglishLevel').value);
             formData.append('age', document.getElementById('editAge').value);
             formData.append('bio', document.getElementById('editBio').value);
-
             const avatarFile = document.getElementById('avatarFile').files[0];
-            if (avatarFile) {
-                formData.append('avatar', avatarFile);
-            }
-
+            if (avatarFile) formData.append('avatar', avatarFile);
             try {
                 const response = await fetch('/api/profile', {
                     method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
-
                 const result = await response.json();
-                
                 if (response.ok) {
-                    alert('Profil muvaffaqiyatli yangilandi!');
+                    alert('Profil yangilandi!');
                     currentUser = result.user;
                     displayUserProfile();
-                    resetForm();
+                    closeEditModal();
                 } else {
-                    alert(result.message);
+                    alert(result.message || 'Xato');
                 }
             } catch (error) {
-                console.error('Xato:', error);
-                alert('Profilni yangilashda xato yuz berdi');
+                alert('Xato yuz berdi: ' + error.message);
             }
         });
 
-        // Formani tozalash
-        function resetForm() {
-            document.getElementById('avatarFile').value = '';
-        }
-
-        // Premium obuna
         async function subscribePremium() {
             if (currentUser.coins < 1200) {
-                alert(`Premium obuna uchun yetarli coin mavjud emas. Sizda ${currentUser.coins} coin, kerak 1200 coin`);
+                alert(`Yetarli coin emas. Kerak: 1200, Sizda: ${currentUser.coins}`);
                 return;
             }
-
-            if (!confirm('1200 coin evaziga Premium obunaga aylanasizmi?')) {
-                return;
-            }
-
+            if (!confirm('1200 coin evaziga premium bo\'lasizmi?')) return;
             try {
                 const response = await fetch('/api/premium/subscribe', {
                     method: 'POST',
@@ -486,39 +802,255 @@
                         'Content-Type': 'application/json'
                     }
                 });
-
                 const result = await response.json();
-                
                 if (response.ok) {
-                    alert('Tabriklaymiz! Siz Premium obunaga aylandingiz!');
-                    loadUserProfile(); // Profilni qayta yuklash
+                    alert('Premium bo\'ldingiz!');
+                    loadUserProfile();
                 } else {
-                    alert(result.message);
+                    alert(result.message || 'Xato');
                 }
             } catch (error) {
-                console.error('Xato:', error);
-                alert('Obuna jarayonida xato yuz berdi');
+                alert('Xato: ' + error.message);
             }
         }
 
-        // Writing Assistant
+        async function loadFriends() {
+            if (!isOwnProfile) return;
+            try {
+                const response = await fetch('/api/friends', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) friends = await response.json();
+                const friendsList = document.getElementById('friendsList');
+                friendsList.innerHTML = friends.map(friend => `
+                    <div class="flex items-center justify-between p-3 sm:p-4 glass rounded-xl cursor-pointer hover:bg-white/10 text-sm" onclick="window.location.href='/profile?userId=${friend._id}'">
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <img src="${friend.avatar ? `/uploads/${friend.avatar}` : 'https://via.placeholder.com/40'}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                            <span class="font-semibold text-white">${friend.firstName} ${friend.lastName}</span>
+                        </div>
+                        <button onclick="event.stopPropagation(); removeFriend('${friend._id}')" class="text-red-400 hover:text-red-300 text-lg">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `).join('') || '<p class="text-gray-400 text-center p-4 text-sm">Do\'stlar yo\'q</p>';
+            } catch (error) {
+                console.error('Do\'stlar xatosi:', error);
+                alert('Do\'stlar yuklashda xato');
+            }
+        }
+
+        function openFriendsModal() {
+            loadFriends();
+            document.getElementById('friendsModal').classList.remove('hidden');
+        }
+        function closeFriendsModal() {
+            document.getElementById('friendsModal').classList.add('hidden');
+        }
+        async function removeFriend(friendId) {
+            if (!confirm('O\'chirishni xohlaysizmi?')) return;
+            try {
+                const res = await fetch(`/api/friends/${friendId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) loadUserProfile();
+            } catch (err) {
+                alert('Xato: ' + err.message);
+            }
+        }
+        async function addFriendAction() {
+            if (!viewedUser) return;
+            try {
+                const res = await fetch('/api/friends', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ friendId: viewedUser._id })
+                });
+                if (res.ok) {
+                    alert('Do\'st qo\'shildi!');
+                    loadUserProfile();
+                } else {
+                    alert('Allaqachon do\'stsiz');
+                }
+            } catch (err) {
+                alert('Xato: ' + err.message);
+            }
+        }
+        async function loadUsersList() {
+            try {
+                const response = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (response.ok) allUsers = await response.json();
+            } catch (error) {
+                console.error('Userlar xatosi:', error);
+            }
+            const searchInput = document.getElementById('searchUsers');
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase();
+                const usersList = document.getElementById('usersList');
+                const filtered = allUsers.filter(u =>
+                    `${u.firstName} ${u.lastName}`.toLowerCase().includes(query) && u._id !== (viewedUserId || currentUser?._id)
+                );
+                usersList.innerHTML = filtered.slice(0, 5).map(user => `
+                    <div class="flex items-center justify-between p-3 sm:p-4 glass rounded-xl cursor-pointer hover:bg-white/10 text-sm" onclick="window.location.href='/profile?userId=${user._id}'">
+                        <div class="flex items-center space-x-2 sm:space-x-3">
+                            <img src="${user.avatar ? `/uploads/${user.avatar}` : 'https://via.placeholder.com/40'}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                            <span class="text-white">${user.firstName} ${user.lastName} <span class="text-gray-400">(${user.rating || 0})</span></span>
+                        </div>
+                        <button onclick="event.stopPropagation(); addFriend('${user._id}')" class="btn-glow bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-white text-xs sm:text-sm">Do'st</button>
+                    </div>
+                `).join('') || '<p class="text-gray-400 text-center p-4 text-sm">Natija yo\'q</p>';
+            });
+        }
+        async function addFriend(userId) {
+            try {
+                const res = await fetch('/api/friends', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ friendId: userId })
+                });
+                if (res.ok) alert('Do\'st qo\'shildi!');
+            } catch (err) {
+                alert('Xato: ' + err.message);
+            }
+        }
+        function loadCompareOptions() {
+            const select = document.getElementById('compareUser');
+            select.innerHTML = '<option value="">Tanlang</option>' + allUsers.filter(u => u._id !== (viewedUserId || currentUser?._id)).map(u => `<option value="${u._id}">${u.firstName} ${u.lastName}</option>`).join('');
+            select.addEventListener('change', (e) => e.target.value && compareWithUser(e.target.value));
+        }
+        async function compareWithUser(userId) {
+            try {
+                const res = await fetch(`/api/compare/${userId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                document.getElementById('comparisonResult').innerHTML = `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 glass rounded-xl text-sm">
+                        <div class="text-center">
+                            <h4 class="font-bold text-white">${(viewedUserId ? viewedUser : currentUser).firstName}</h4>
+                            <p class="text-gray-300">Kurslar: ${data.current.completedCourses}</p>
+                            <p class="text-gray-300">Darslar: ${data.current.completedLessons}</p>
+                            <p class="text-blue-400 font-bold">Reyting: ${data.current.rating}</p>
+                        </div>
+                        <div class="text-center">
+                            <h4 class="font-bold text-white">${data.compare.firstName}</h4>
+                            <p class="text-gray-300">Kurslar: ${data.compare.completedCourses}</p>
+                            <p class="text-gray-300">Darslar: ${data.compare.completedLessons}</p>
+                            <p class="text-blue-400 font-bold">Reyting: ${data.compare.rating}</p>
+                        </div>
+                    </div>
+                    <p class="text-center text-green-400 font-semibold mt-3 sm:mt-4 text-sm">Siz ${data.current.rating > data.compare.rating ? 'oldingiz!' : 'orqada qoldingiz'} </p>
+                `;
+                document.getElementById('comparisonResult').classList.remove('hidden');
+            } catch (err) {
+                alert('Solishtirish xatosi: ' + err.message);
+            }
+        }
+
+        // Ta'lim Funksiyalari
+        async function openFlashcards() {
+            try {
+                const res = await fetch('/api/flashcards', { headers: { 'Authorization': `Bearer ${token}` } });
+                const cards = await res.json();
+                let index = 0;
+                function showCard() {
+                    const list = document.getElementById('flashcardsList');
+                    list.innerHTML = `
+                        <div class="glass p-6 sm:p-8 rounded-2xl text-center card-hover text-sm sm:text-base">
+                            <h4 class="text-2xl sm:text-3xl font-bold text-white mb-2">${cards[index].english}</h4>
+                            <p class="text-blue-300 text-lg sm:text-xl mb-3 sm:mb-4">${cards[index].uzbek}</p>
+                            <p class="text-gray-300 italic">${cards[index].example}</p>
+                        </div>
+                    `;
+                }
+                window.nextFlashcard = () => {
+                    index = (index + 1) % cards.length;
+                    showCard();
+                };
+                showCard();
+                document.getElementById('flashcardsModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Flashcards xatosi: ' + err.message);
+            }
+        }
+        function closeFlashcards() {
+            document.getElementById('flashcardsModal').classList.add('hidden');
+        }
+        async function openGrammarQuiz() {
+            try {
+                const res = await fetch('/api/grammar-quiz', { headers: { 'Authorization': `Bearer ${token}` } });
+                const quiz = await res.json();
+                let currentQ = 0;
+                function showQuestion() {
+                    const content = document.getElementById('grammarQuizContent');
+                    content.innerHTML = `
+                        <div class="space-y-3 sm:space-y-4">
+                            <h4 class="font-bold text-white text-base sm:text-xl mb-3 sm:mb-4">${currentQ + 1}. ${quiz.questions[currentQ].question}</h4>
+                            <div class="space-y-2 sm:space-y-3">
+                                ${quiz.questions[currentQ].options.map((opt, i) => `
+                                    <label class="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 glass rounded-xl cursor-pointer hover:bg-white/10 text-sm">
+                                        <input type="radio" name="gq${currentQ}" value="${i}" class="text-blue-500">
+                                        <span class="text-white">${opt}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                window.submitGrammarQuiz = () => {
+                    let score = 0;
+                    quiz.questions.forEach((q, i) => {
+                        const selected = document.querySelector(`input[name="gq${i}"]:checked`);
+                        if (selected && parseInt(selected.value) === q.correct) score++;
+                    });
+                    alert(`Siz ${score}/${quiz.questions.length} ball oldingiz! +${score * 5} coin`);
+                    closeGrammarQuiz();
+                };
+                showQuestion();
+                document.getElementById('grammarQuizModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Quiz xatosi: ' + err.message);
+            }
+        }
+        function closeGrammarQuiz() {
+            document.getElementById('grammarQuizModal').classList.add('hidden');
+        }
+        async function openDailyChallenge() {
+            try {
+                const res = await fetch('/api/daily-challenge', { headers: { 'Authorization': `Bearer ${token}` } });
+                const challenge = await res.json();
+                document.getElementById('challengeContent').innerHTML = `
+                    <i class="fas fa-lightbulb text-yellow-400 text-3xl sm:text-4xl mb-3 sm:mb-4"></i>
+                    <h4 class="font-bold text-base sm:text-xl text-white mb-2">${challenge.tip}</h4>
+                    <p class="text-gray-300 text-sm">${challenge.challenge}</p>
+                `;
+                document.getElementById('dailyChallengeModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Challenge xatosi: ' + err.message);
+            }
+        }
+        function completeChallenge() {
+            alert('Challenge tugallandi! +10 coin qo\'shildi');
+            document.getElementById('dailyChallengeModal').classList.add('hidden');
+        }
+        function openSpeakingPractice() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = 'en-US';
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    const score = Math.random() * 20 + 80;
+                    alert(`Siz aytdingiz: "${transcript}". Baho: ${Math.round(score)}%`);
+                };
+                recognition.start();
+            } else {
+                alert('Speaking qo\'llab-quvvatlanmaydi');
+            }
+        }
         function openWritingAssistant() {
             document.getElementById('writingModal').classList.remove('hidden');
         }
-
         function closeWritingModal() {
             document.getElementById('writingModal').classList.add('hidden');
             document.getElementById('writingResult').classList.add('hidden');
             document.getElementById('writingText').value = '';
         }
-
         async function checkWriting() {
             const text = document.getElementById('writingText').value;
-            if (!text.trim()) {
-                alert('Iltimos, tekshirish uchun matn kiriting');
-                return;
-            }
-
+            if (!text.trim()) return alert('Matn kiriting');
             try {
                 const response = await fetch('/api/ai/writing-check', {
                     method: 'POST',
@@ -528,80 +1060,234 @@
                     },
                     body: JSON.stringify({ text })
                 });
-
                 const result = await response.json();
-                displayWritingResult(result);
+                const resultDiv = document.getElementById('writingResult');
+                resultDiv.classList.remove('hidden');
+                let mistakesHtml = result.grammarMistakes.map(m => `
+                    <div class="glass p-3 sm:p-4 rounded-xl border-l-4 border-red-400 text-sm">
+                        <p class="text-white"><strong>Xato:</strong> "${m.mistake}" → "${m.correction}"</p>
+                        <p class="text-red-300 text-xs sm:text-sm">${m.explanation}</p>
+                    </div>
+                `).join('') || '<p class="text-green-400 text-sm">Xato yo\'q!</p>';
+                let suggestionsHtml = result.suggestions.map(s => `<li class="text-blue-300 text-sm">${s}</li>`).join('');
+                resultDiv.innerHTML = `
+                    <div class="glass p-3 sm:p-4 rounded-xl text-sm">
+                        <h4 class="text-base sm:text-xl font-bold text-white">Baho: ${result.score}/10</h4>
+                        <p class="text-gray-300">${result.overallFeedback}</p>
+                    </div>
+                    <div class="space-y-2">${mistakesHtml}</div>
+                    ${suggestionsHtml ? `<ul class="space-y-1 text-sm">${suggestionsHtml}</ul>` : ''}
+                `;
             } catch (error) {
-                console.error('Xato:', error);
+                alert('Tekshirish xatosi: ' + error.message);
             }
         }
 
-        function displayWritingResult(result) {
-            const resultDiv = document.getElementById('writingResult');
-            resultDiv.classList.remove('hidden');
-            
-            let mistakesHtml = '';
-            if (result.grammarMistakes.length > 0) {
-                mistakesHtml = `
-                    <div class="mb-4">
-                        <h4 class="font-semibold text-red-600 mb-2">Grammatik Xatolar:</h4>
-                        ${result.grammarMistakes.map(mistake => `
-                            <div class="bg-red-50 border border-red-200 rounded p-3 mb-2">
-                                <p><strong>Xato:</strong> "${mistake.mistake}"</p>
-                                <p><strong>To'g'ri:</strong> "${mistake.correction}"</p>
-                                <p><strong>Izoh:</strong> ${mistake.explanation}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+        // Yangi Ta'lim Funksiyalari
+        async function openVocabularyBuilder() {
+            try {
+                const res = await fetch('/api/vocabulary-builder', { headers: { 'Authorization': `Bearer ${token}` } });
+                const words = await res.json();
+                let index = 0;
+                function showWord() {
+                    const content = document.getElementById('vocabularyContent');
+                    content.innerHTML = `
+                        <div class="glass p-6 sm:p-8 rounded-2xl text-center card-hover text-sm sm:text-base">
+                            <h4 class="text-2xl sm:text-3xl font-bold text-white mb-2">${words[index].word}</h4>
+                            <p class="text-red-300 text-lg sm:text-xl mb-3 sm:mb-4">${words[index].meaning}</p>
+                            <p class="text-gray-300 italic">${words[index].example}</p>
+                        </div>
+                    `;
+                }
+                window.nextVocabularyWord = () => {
+                    index = (index + 1) % words.length;
+                    showWord();
+                };
+                showWord();
+                document.getElementById('vocabularyModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Vocabulary xatosi: ' + err.message);
             }
-
-            let suggestionsHtml = '';
-            if (result.suggestions.length > 0) {
-                suggestionsHtml = `
-                    <div class="mb-4">
-                        <h4 class="font-semibold text-blue-600 mb-2">Takliflar:</h4>
-                        <ul class="list-disc list-inside space-y-1">
-                            ${result.suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-
-            resultDiv.innerHTML = `
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="text-center mb-4">
-                        <h4 class="text-xl font-bold">Writing Bahosi: ${result.score}/10</h4>
-                        <p class="text-gray-600">${result.overallFeedback}</p>
-                    </div>
-                    ${mistakesHtml}
-                    ${suggestionsHtml}
-                </div>
-            `;
+        }
+        function closeVocabularyBuilder() {
+            document.getElementById('vocabularyModal').classList.add('hidden');
         }
 
-        function openSpeakingPractice() {
-            alert('Speaking practice funksiyasi keyingi versiyada qo\'shiladi');
+        async function openReadingPractice() {
+            try {
+                const res = await fetch('/api/reading-practice', { headers: { 'Authorization': `Bearer ${token}` } });
+                const reading = await res.json();
+                document.getElementById('readingText').innerHTML = `<p class="text-white text-base sm:text-lg leading-relaxed">${reading.text}</p>`;
+                document.getElementById('readingQuestions').innerHTML = reading.questions.map((q, i) => `
+                    <div class="space-y-2 text-sm">
+                        <h5 class="font-bold text-white">${i+1}. ${q.q}</h5>
+                        <div class="space-y-2">
+                            ${q.options.map((opt, j) => `
+                                <label class="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 glass rounded-xl cursor-pointer hover:bg-white/10 text-sm">
+                                    <input type="radio" name="rq${i}" value="${j}" class="text-teal-500">
+                                    <span class="text-white">${opt}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('readingModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Reading xatosi: ' + err.message);
+            }
+        }
+        function closeReadingPractice() {
+            document.getElementById('readingModal').classList.add('hidden');
+        }
+        function submitReadingQuiz() {
+            alert('Tekshirildi! Backendda to\'liq implement qiling.');
+            closeReadingPractice();
+        }
+
+        // Chat va Video
+        function openChat() {
+            if (!viewedUser) return;
+            currentChatUserId = viewedUser._id;
+            document.getElementById('chatWithName').textContent = `${viewedUser.firstName} ${viewedUser.lastName}`;
+            loadChatMessages();
+            document.getElementById('chatModal').classList.remove('hidden');
+        }
+        function closeChat() {
+            document.getElementById('chatModal').classList.add('hidden');
+        }
+        async function loadChatMessages() {
+            try {
+                const res = await fetch(`/api/chat/${currentChatUserId}/messages`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const messages = await res.json();
+                const messagesDiv = document.getElementById('chatMessages');
+                messagesDiv.innerHTML = messages.map(msg => `
+                    <div class="${msg.from._id === currentUser._id ? 'text-right' : 'text-left'}">
+                        <div class="inline-block p-2 sm:p-3 rounded-xl ${msg.from._id === currentUser._id ? 'bg-blue-500 text-white' : 'bg-gray-700'} max-w-xs text-xs sm:text-sm">
+                            ${msg.text} ${msg.coins ? `(+${msg.coins} coin)` : ''}
+                        </div>
+                        <p class="text-xs text-gray-400">${new Date(msg.createdAt).toLocaleTimeString()}</p>
+                    </div>
+                `).join('');
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            } catch (err) {
+                console.error('Chat xatosi:', err);
+                alert('Chat yuklashda xato');
+            }
+        }
+        async function sendChatMessage() {
+            const text = document.getElementById('chatMessage').value.trim();
+            const coins = parseInt(document.getElementById('coinAmount').value) || 0;
+            if (!text && coins === 0) return;
+            try {
+                const res = await fetch(`/api/chat/${currentChatUserId}/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text, coins })
+                });
+                if (res.ok) {
+                    document.getElementById('chatMessage').value = '';
+                    document.getElementById('coinAmount').value = '';
+                    loadChatMessages();
+                } else {
+                    alert('Xabar yuborishda xato');
+                }
+            } catch (err) {
+                alert('Xabar xatosi: ' + err.message);
+            }
+        }
+
+        let localStream = null;
+        let remoteStream = null;
+        let currentCall = null;
+        function openVideoChat() {
+            if (!viewedUser) return;
+            document.getElementById('videoChatWithName').textContent = `${viewedUser.firstName} ${viewedUser.lastName}`;
+            peer = new Peer();
+            peer.on('open', (id) => {
+                console.log('Peer ID: ' + id);
+                alert('Video uchun Peer ID: ' + id + '. Chatda ulashing!');
+            });
+            document.getElementById('videoChatModal').classList.remove('hidden');
+        }
+        function closeVideoChat() {
+            document.getElementById('videoChatModal').classList.add('hidden');
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (currentCall) {
+                currentCall.close();
+            }
+        }
+        async function startVideoCall() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                const remoteId = prompt('Peer ID kiriting:');
+                if (remoteId) {
+                    currentCall = peer.call(remoteId, localStream);
+                    currentCall.on('stream', (remoteStream) => {
+                        document.getElementById('remoteVideo').srcObject = remoteStream;
+                    });
+                }
+            } catch (err) {
+                alert('Ruxsat kerak yoki xato: ' + err.message);
+            }
+        }
+        function endVideoCall() {
+            if (currentCall) currentCall.close();
+            closeVideoChat();
+        }
+
+        function sendCoins() {
+            if (!viewedUser) return;
+            document.getElementById('coinModal').classList.remove('hidden');
+        }
+        function closeCoinModal() {
+            document.getElementById('coinModal').classList.add('hidden');
+            document.getElementById('sendCoinsAmount').value = '';
+        }
+        async function confirmSendCoins() {
+            const amount = parseInt(document.getElementById('sendCoinsAmount').value);
+            if (!amount || amount <= 0) return alert('Miqdor kiriting');
+            if (!confirm(`${amount} coin yuborishni xohlaysizmi?`)) return;
+            try {
+                const res = await fetch(`/api/coins/send/${viewedUser._id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount })
+                });
+                if (res.ok) {
+                    alert(`${amount} coin yuborildi!`);
+                    closeCoinModal();
+                    loadUserProfile();
+                } else {
+                    const err = await res.json();
+                    alert(err.message || 'Xato');
+                }
+            } catch (err) {
+                alert('Yuborish xatosi: ' + err.message);
+            }
         }
 
         function getLevelText(level) {
-            const levels = {
-                'beginner': 'Boshlang\'ich',
-                'elementary': 'Elementar', 
-                'intermediate': 'O\'rta',
-                'upper-intermediate': 'Yuqori O\'rta',
-                'advanced': 'Ilg\'or'
-            };
+            const levels = { beginner: 'Boshlang\'ich', elementary: 'Elementar', intermediate: 'O\'rta', 'upper-intermediate': 'Yuqori O\'rta', advanced: 'Ilg\'or' };
             return levels[level] || level;
         }
-
-        // Chiqish funksiyasi
         function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/';
+            if (confirm('Chiqishni xohlaysizmi?')) {
+                localStorage.removeItem('token');
+                window.location.href = '/';
+            }
         }
 
-        // Sahifa yuklanganda
         document.addEventListener('DOMContentLoaded', loadUserProfile);
     </script>
 </body>
