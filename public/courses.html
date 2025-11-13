@@ -26,33 +26,108 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        /* Mobile Menu Styles */
+        .mobile-menu { 
+            position: fixed; 
+            top: 0; 
+            right: -100%; 
+            width: 80%; 
+            max-width: 300px; 
+            height: 100vh; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px); 
+            transition: right 0.3s ease-in-out; 
+            z-index: 1000; 
+            padding-top: 80px; 
+        }
+        .mobile-menu.open { right: 0; }
+        .mobile-menu-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100vh; 
+            background: rgba(0, 0, 0, 0.5); 
+            z-index: 999; 
+            opacity: 0; 
+            visibility: hidden; 
+            transition: all 0.3s ease-in-out; 
+        }
+        .mobile-menu-overlay.open { opacity: 1; visibility: visible; }
+        .hamburger { display: none; flex-direction: column; cursor: pointer; }
+        .hamburger span { width: 25px; height: 3px; background: white; margin: 3px 0; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .desktop-menu { display: none !important; }
+            .filters { flex-direction: column !important; }
+            .course-card { padding: 1rem !important; }
+            .course-image { height: 12rem !important; }
+            .writing-modal { max-width: 95vw !important; }
+        }
+        @media (max-width: 640px) {
+            .course-title { font-size: 1.125rem !important; }
+            .course-desc { font-size: 0.875rem !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen text-white">
     <!-- Navigation -->
     <nav class="glass fixed top-0 w-full z-50 py-4 px-6 shadow-2xl">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold flex items-center glass px-4 py-2 rounded-xl">
+            <a href="/" class="text-xl md:text-2xl font-bold flex items-center glass px-3 md:px-4 py-2 rounded-xl">
                 <i class="fas fa-graduation-cap mr-2"></i> EnglishMaster
             </a>
-            <div class="flex items-center space-x-6">
-                <a href="/courses" class="glass px-4 py-2 rounded-xl font-semibold hover:bg-white/10 transition">Kurslar</a>
-                <a href="/profile" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">Profil</a>
-                <button onclick="openWritingAssistant()" class="glass px-4 py-2 rounded-xl hover:bg-white/10 transition">
+            <!-- Desktop Menu -->
+            <div id="desktopMenu" class="hidden md:flex items-center space-x-4 md:space-x-6">
+                <a href="/courses" class="glass px-3 md:px-4 py-2 rounded-xl font-semibold hover:bg-white/10 transition text-sm md:text-base">Kurslar</a>
+                <a href="/profile" class="glass px-3 md:px-4 py-2 rounded-xl hover:bg-white/10 transition text-sm md:text-base">Profil</a>
+                <button onclick="openWritingAssistant()" class="glass px-3 md:px-4 py-2 rounded-xl hover:bg-white/10 transition text-sm md:text-base">
                     <i class="fas fa-robot mr-2"></i> AI Writing
                 </button>
-                <span id="userCoins" class="glass px-4 py-2 rounded-xl font-semibold flex items-center">
-                    <i class="fas fa-coins mr-2"></i>
+                <span id="userCoins" class="glass px-3 md:px-4 py-2 rounded-xl font-semibold flex items-center text-sm md:text-base">
+                    <i class="fas fa-coins mr-2 text-yellow-400"></i>
                     <span id="coinsCount">0</span> coin
                 </span>
-                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-6 py-2 rounded-xl transition text-white font-semibold">
+                <button onclick="logout()" class="btn-glow bg-red-600 hover:bg-red-700 px-4 md:px-6 py-2 rounded-xl transition text-white font-semibold text-sm md:text-base">
                     <i class="fas fa-sign-out-alt mr-2"></i> Chiqish
                 </button>
+            </div>
+            <!-- Hamburger Button -->
+            <div id="hamburger" class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
         </div>
     </nav>
 
-    <div class="pt-20 container mx-auto px-4 py-12">
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu">
+        <div class="p-4 md:p-6 space-y-4 text-gray-800">
+            <a href="/courses" class="block py-3 px-4 rounded-xl hover:bg-blue-100 transition text-lg font-semibold">
+                <i class="fas fa-book mr-2"></i> Kurslar
+            </a>
+            <a href="/profile" class="block py-3 px-4 rounded-xl hover:bg-blue-100 transition text-lg">
+                <i class="fas fa-user mr-2"></i> Profil
+            </a>
+            <span id="mobileCoins" class="block py-3 px-4 rounded-xl bg-blue-50 font-semibold flex items-center text-lg">
+                <i class="fas fa-coins mr-2 text-yellow-400"></i> <span id="mobileCoinsCount">0</span> coin
+            </span>
+            <button onclick="openWritingAssistant()" class="block w-full text-left py-3 px-4 rounded-xl hover:bg-purple-100 transition text-lg font-semibold">
+                <i class="fas fa-robot mr-2"></i> AI Writing
+            </button>
+            <button onclick="logout()" class="w-full bg-red-600 text-white py-3 px-4 rounded-xl hover:bg-red-700 transition font-semibold">
+                <i class="fas fa-sign-out-alt mr-2"></i> Chiqish
+            </button>
+        </div>
+    </div>
+
+    <div class="pt-20 container mx-auto px-4 py-8 md:py-12">
         <div id="loading" class="text-center py-8 fade-in">
             <div class="loading mx-auto mb-4"></div>
             <p>Kurslar yuklanmoqda...</p>
@@ -60,63 +135,74 @@
 
         <div id="coursesSection" class="hidden">
             <!-- Filter va Qidirish -->
-            <div class="glass rounded-2xl p-4 mb-6">
-                <div class="flex flex-col md:flex-row gap-4 items-center">
-                    <input type="text" id="searchInput" placeholder="Kurs nomini yozing..." class="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <select id="levelFilter" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <div class="glass rounded-2xl p-4 md:p-6 mb-6">
+                <div class="flex flex-col md:flex-row filters gap-4 items-center">
+                    <input type="text" id="searchInput" placeholder="Kurs nomini yozing..." class="flex-1 px-3 md:px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base">
+                    <select id="levelFilter" class="px-3 md:px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base">
                         <option value="">Barcha Darajalar</option>
                         <option value="beginner">Boshlang'ich</option>
                         <option value="intermediate">O'rta</option>
                         <option value="advanced">Ilg'or</option>
                     </select>
-                    <select id="categoryFilter" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <select id="categoryFilter" class="px-3 md:px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base">
                         <option value="">Barcha Kategoriyalar</option>
                         <option value="General English">Umumiy Ingliz</option>
                         <option value="Business">Biznes</option>
                         <option value="Academic">Akademik</option>
                     </select>
-                    <button onclick="filterCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl text-white font-semibold">Filtr</button>
+                    <button onclick="filterCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-4 md:px-6 py-2 rounded-xl text-white font-semibold text-sm md:text-base">Filtr</button>
                 </div>
             </div>
 
             <!-- Kurslar Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="coursesGrid">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" id="coursesGrid">
                 <!-- Kurslar yuklanadi -->
             </div>
 
             <!-- Pagination -->
             <div id="pagination" class="text-center mt-8 hidden">
-                <button onclick="changePage(-1)" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white mr-2 hover:bg-white/20">Oldingi</button>
-                <span id="pageInfo" class="text-white mx-4"></span>
-                <button onclick="changePage(1)" class="px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white ml-2 hover:bg-white/20">Keyingi</button>
+                <button onclick="changePage(-1)" class="px-3 md:px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white mr-2 hover:bg-white/20 text-sm md:text-base">Oldingi</button>
+                <span id="pageInfo" class="text-white mx-4 text-sm md:text-base"></span>
+                <button onclick="changePage(1)" class="px-3 md:px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white ml-2 hover:bg-white/20 text-sm md:text-base">Keyingi</button>
             </div>
         </div>
 
         <div id="noCourses" class="hidden text-center py-12 fade-in">
-            <i class="fas fa-search text-6xl text-gray-200 mb-4"></i>
-            <h3 class="text-2xl font-semibold text-gray-200 mb-2">Kurslar topilmadi</h3>
-            <p class="text-gray-300 mb-4">Qidiruv so'zini o'zgartiring yoki barcha kurslarni ko'ring</p>
-            <button onclick="loadCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-xl text-white font-semibold">Barchasini yuklash</button>
+            <i class="fas fa-search text-4xl md:text-6xl text-gray-200 mb-4"></i>
+            <h3 class="text-xl md:text-2xl font-semibold text-gray-200 mb-2">Kurslar topilmadi</h3>
+            <p class="text-gray-300 mb-4 text-sm md:text-base">Qidiruv so'zini o'zgartiring yoki barcha kurslarni ko'ring</p>
+            <button onclick="loadCourses()" class="btn-glow bg-blue-600 hover:bg-blue-700 px-4 md:px-6 py-3 rounded-xl text-white font-semibold text-sm md:text-base">Barchasini yuklash</button>
         </div>
     </div>
 
     <!-- Writing Assistant Modal -->
-    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-4">
-        <div class="glass rounded-2xl w-full max-w-2xl p-6">
+    <div id="writingModal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center z-50 p-2 md:p-4 writing-modal">
+        <div class="glass rounded-2xl w-full max-w-2xl p-4 md:p-6">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white">AI Writing Assistant</h3>
-                <button onclick="closeWritingModal()" class="text-gray-300 hover:text-white text-2xl">&times;</button>
+                <h3 class="text-lg md:text-xl font-bold text-white">AI Writing Assistant</h3>
+                <button onclick="closeWritingModal()" class="text-gray-300 hover:text-white text-xl md:text-2xl">&times;</button>
             </div>
-            <textarea id="writingText" rows="6" placeholder="Ingliz tilida matn yozing..." class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"></textarea>
-            <button onclick="checkWriting()" class="mt-4 w-full btn-glow bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl">Tekshirish</button>
+            <textarea id="writingText" rows="6" placeholder="Ingliz tilida matn yozing..." class="w-full p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm md:text-base"></textarea>
+            <button onclick="checkWriting()" class="mt-4 w-full btn-glow bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm md:text-base">Tekshirish</button>
             <div id="writingResult" class="mt-4 hidden">
-                <h4 class="text-white font-bold">Natija:</h4>
-                <p id="writingFeedback" class="text-gray-200"></p>
+                <h4 class="text-white font-bold text-sm md:text-base">Natija:</h4>
+                <p id="writingFeedback" class="text-gray-200 text-sm md:text-base"></p>
             </div>
         </div>
     </div>
 
     <script>
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            const hamburger = document.getElementById('hamburger');
+            
+            menu.classList.toggle('open');
+            overlay.classList.toggle('open');
+            hamburger.classList.toggle('active');
+        }
+
         const token = localStorage.getItem('token');
         if (!token) window.location.href = '/login';
 
@@ -160,28 +246,28 @@
 
             pageCourses.forEach(course => {
                 const card = document.createElement('div');
-                card.className = 'glass rounded-2xl overflow-hidden card-hover fade-in';
+                card.className = 'glass rounded-2xl overflow-hidden card-hover fade-in course-card';
                 card.innerHTML = `
-                    <div class="h-48 relative overflow-hidden">
+                    <div class="h-48 course-image relative overflow-hidden">
                         ${course.image ? `<img src="/uploads/${course.image}" alt="${course.title}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">` : 
                          `<div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <i class="fas fa-book-open text-white text-5xl"></i>
+                            <i class="fas fa-book-open text-white text-4xl md:text-5xl"></i>
                           </div>`}
                     </div>
-                    <div class="p-4">
-                        <h3 class="text-lg font-bold text-white mb-2">${course.title}</h3>
-                        <p class="text-gray-300 mb-3 line-clamp-2">${course.description || 'Tavsif mavjud emas'}</p>
+                    <div class="p-4 course-card">
+                        <h3 class="text-base md:text-lg font-bold text-white mb-2 course-title">${course.title}</h3>
+                        <p class="text-gray-300 mb-3 line-clamp-2 text-sm course-desc">${course.description || 'Tavsif mavjud emas'}</p>
                         <div class="flex justify-between items-center mb-3">
-                            <span class="glass px-3 py-1 rounded-full text-sm">${getLevelText(course.level)}</span>
-                            <span class="text-lg font-bold ${course.price === 0 ? 'text-green-400' : 'text-yellow-300'}">
+                            <span class="glass px-2 md:px-3 py-1 rounded-full text-xs md:text-sm">${getLevelText(course.level)}</span>
+                            <span class="text-base md:text-lg font-bold ${course.price === 0 ? 'text-green-400' : 'text-yellow-300'}">
                                 ${course.price === 0 ? 'Bepul' : course.price + ' coin'}
                             </span>
                         </div>
-                        <div class="text-sm text-gray-400 mb-4">
+                        <div class="text-xs md:text-sm text-gray-400 mb-4">
                             <span><i class="fas fa-users mr-1"></i>${course.students?.length || 0} o'quvchi</span>
-                            <span class="ml-4"><i class="fas fa-clock mr-1"></i>${course.lessons?.length || 0} dars</span>
+                            <span class="ml-2 md:ml-4"><i class="fas fa-clock mr-1"></i>${course.lessons?.length || 0} dars</span>
                         </div>
-                        <a href="/course/${course._id}" class="block w-full btn-glow bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-center transition">
+                        <a href="/course/${course._id}" class="block w-full btn-glow bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl text-center transition text-sm md:text-base">
                             Kursni Ko'rish
                         </a>
                     </div>
@@ -280,8 +366,9 @@
             try {
                 const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
-                    const { user } = await res.json();
-                    document.getElementById('coinsCount').textContent = user.coins;
+                    const profileData = await res.json();
+                    document.getElementById('coinsCount').textContent = profileData.coins;
+                    document.getElementById('mobileCoinsCount').textContent = profileData.coins;
                 }
             } catch (err) {
                 console.error('Coins yuklash xatosi:', err);
