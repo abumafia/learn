@@ -455,7 +455,7 @@
                 return;
             }
             try {
-                const response = await fetch('/api/admin/stats', {
+                const response = await fetch('https://learn-uz.onrender.com/api/admin/stats', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -487,7 +487,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/revenue?period=${period}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/revenue?period=${period}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -727,7 +727,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/users/${userId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/users/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -781,7 +781,7 @@
                 isActive: document.getElementById('editUserIsActive').checked
             };
             try {
-                const response = await fetch(`/api/admin/users/${userId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/users/${userId}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -813,7 +813,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/users/${userId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/users/${userId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -946,7 +946,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/courses/${courseId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/courses/${courseId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1000,7 +1000,7 @@
                 formData.append('image', imageFile);
             }
             try {
-                const response = await fetch(`/api/admin/courses/${courseId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/courses/${courseId}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1031,7 +1031,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/courses/${courseId}/approve`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/courses/${courseId}/approve`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1062,7 +1062,7 @@
                 return;
             }
             try {
-                const response = await fetch(`/api/admin/courses/${courseId}`, {
+                const response = await fetch(`https://learn-uz.onrender.com/api/admin/courses/${courseId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
