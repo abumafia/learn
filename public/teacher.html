@@ -236,7 +236,7 @@
         async function loadMyCourses() {
             showLoading();
             try {
-                const response = await fetch('/api/teacher/courses', {
+                const response = await fetch('https://learn-uz.onrender.com/api/teacher/courses', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
@@ -516,7 +516,7 @@
         // Kurs o'chirish
         function deleteCourse(courseId) {
             if (confirm('Kursni o\'chirishni xohlaysizmi?')) {
-                fetch(`/api/courses/${courseId}`, {
+                fetch(`https://learn-uz.onrender.com/api/courses/${courseId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 }).then(res => {
@@ -532,7 +532,7 @@
 
         // O'quvchi Progressi Ko'rish
         function viewStudentProgress(courseId) {
-            fetch(`/api/courses/${courseId}/participants`, {
+            fetch(`https://learn-uz.onrender.com/api/courses/${courseId}/participants`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             }).then(res => res.json()).then(data => {
                 document.getElementById('studentProgressContent').innerHTML = data.participants.map(student => `
@@ -566,7 +566,7 @@
             if (!text.trim()) return alert('Matn kiriting');
 
             try {
-                const res = await fetch('/api/ai/writing-check', {
+                const res = await fetch('https://learn-uz.onrender.com/api/ai/writing-check', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text })
@@ -593,7 +593,7 @@
 
         async function loadUserCoins() {
             try {
-                const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch('https://learn-uz.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const { user } = await res.json();
                     document.getElementById('coinsCount').textContent = user.coins;
