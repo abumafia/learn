@@ -328,16 +328,16 @@
         document.getElementById('loading').classList.remove('hidden');
         async function loadCourse() {
             try {
-                const profileRes = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const profileRes = await fetch('https://learn-uz.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!profileRes.ok) throw new Error('Profil xatosi');
                 const profileData = await profileRes.json();
                 userId = profileData._id;
-                const courseResponse = await fetch(`/api/courses/${courseId}?include=likes,comments`);
+                const courseResponse = await fetch(`https://learn-uz.onrender.com/api/courses/${courseId}?include=likes,comments`);
                 if (!courseResponse.ok) throw new Error('Kurs topilmadi');
                 currentCourse = await courseResponse.json();
                 let progressResponse;
                 try {
-                    progressResponse = await fetch('/api/progress', { headers: { 'Authorization': `Bearer ${token}` } });
+                    progressResponse = await fetch('https://learn-uz.onrender.com/api/progress', { headers: { 'Authorization': `Bearer ${token}` } });
                     if (progressResponse.ok) {
                         const progressList = await progressResponse.json();
                         userProgress = progressList.find(p => p.course._id.toString() === courseId);
@@ -436,7 +436,7 @@
         }
         async function enrollCourse() {
             try {
-                const res = await fetch(`/api/courses/${courseId}/enroll`, {
+                const res = await fetch(`https://learn-uz.onrender.com/api/courses/${courseId}/enroll`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -491,7 +491,7 @@
         }
         async function completeLesson(lessonId) {
             try {
-                const res = await fetch(`/api/courses/${courseId}/lessons/${lessonId}/complete`, {
+                const res = await fetch(`https://learn-uz.onrender.com/api/courses/${courseId}/lessons/${lessonId}/complete`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -547,7 +547,7 @@
             });
             if (answered < currentQuiz.questions.length) return alert('Barcha savollarga javob bering!');
             try {
-                const res = await fetch(`/api/courses/${courseId}/quizzes/${currentQuiz._id}/submit`, {
+                const res = await fetch(`https://learn-uz.onrender.com/api/courses/${courseId}/quizzes/${currentQuiz._id}/submit`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -639,7 +639,7 @@
             const text = document.getElementById('writingText').value.trim();
             if (!text) return alert('Matn kiriting');
             try {
-                const res = await fetch('/api/ai/writing-check', {
+                const res = await fetch('https://learn-uz.onrender.com/api/ai/writing-check', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -670,7 +670,7 @@
         }
         async function loadUserCoins() {
             try {
-                const res = await fetch('/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch('https://learn-uz.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const user = await res.json();
                     document.getElementById('coinsCount').textContent = user.coins;
