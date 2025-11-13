@@ -194,7 +194,7 @@
         let recognition = null;
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const profileRes = await fetch('https://learn-prc7.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const profileRes = await fetch('https://learn-uz.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (profileRes.ok) {
                     const user = await profileRes.json();
                     userId = user._id;
@@ -208,7 +208,7 @@
 
         async function loadUserCoins() {
             try {
-                const res = await fetch('https://learn-prc7.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch('https://learn-uz.onrender.com/api/profile', { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const user = await res.json();
                     document.getElementById('coinsCount').textContent = user.coins;
@@ -232,7 +232,7 @@
             showTyping(true);
 
             try {
-                const res = await fetch('https://learn-prc7.onrender.com/api/chatbot/message', {
+                const res = await fetch('https://learn-uz.onrender.com/api/chatbot/message', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -301,7 +301,7 @@
             const text = document.getElementById('writingText').value.trim();
             if (!text) return alert('Matn kiriting');
             try {
-                const res = await fetch('https://learn-prc7.onrender.com/api/ai/writing-check', {
+                const res = await fetch('https://learn-uz.onrender.com/api/ai/writing-check', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
